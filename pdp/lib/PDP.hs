@@ -94,6 +94,7 @@ module PDP
   , name
 
   , NamedI(..)
+  , unNamedI
 
   , Refined
   , pattern Refined
@@ -632,20 +633,6 @@ instance forall n. (KR.KnownRational n, KR.Den n ~ 1, KI.FromNatural 0 <= KR.Num
 instance forall n. (KR.KnownRational n, KR.Den n ~ 1)
   => NamedI n Integer where
   namedI = unsafeNamed (demote @(KR.Num n))
-
--- instance KR.KnownRational n => NamedI n (G.Geld a G.Dense Rational) where
---   namedI = unsafeNamed (G.GeldDenseRational (KR.SRational @n))
---
--- instance (KR.KnownRational n, KR.Terminating n) => NamedI n (G.Geld a G.Dense Scientific) where
---   namedI = unsafeNamed (G.GeldDenseScientific (KR.SRational @n))
---
--- instance (KI.KnownInteger c, KR.KnownRational n, c KR.:% 1 ~ n KR.% d, G.KnownDensityScale (G.Discrete d))
---   => NamedI n (G.Geld a (G.Discrete d) Rational) where
---   namedI = unsafeNamed (G.GeldDiscreteRational (KR.SRational @n) (KI.SInteger @c))
---
--- instance (KI.KnownInteger c, KR.KnownRational n, c KR.:% 1 ~ n KR.% d, G.KnownDensityScale (G.Discrete d), KR.Terminating n)
---   => NamedI n (G.Geld a (G.Discrete d) Scientific) where
---   namedI = unsafeNamed (G.GeldDiscreteScientific (KR.SRational @n) (KI.SInteger @c))
 
 --------------------------------------------------------------------------------
 
