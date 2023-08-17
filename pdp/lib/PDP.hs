@@ -53,9 +53,16 @@ module PDP
   , unNOT1
 
   , Prove1(..)
+  , prove1E
   , prove1S
   , prove1S1
-  , prove1E
+  , prove1Refine
+  , prove1RefineS
+  , prove1RefineS1
+  , unsafeProve1S
+  , unsafeProve1S1
+  , unsafeProve1RefineS
+  , unsafeProve1RefineS1
 
   , Prove(..)
   , proveE
@@ -349,6 +356,42 @@ refine :: n @ a -> Proof (p (n @ a)) -> a ? p
 refine (Named a) _ = MkRefined a
 {-# INLINE refine #-}
 
+prove1Refine :: forall p a. Prove1 p a => a -> Maybe (a ? p)
+prove1Refine a = name a $ \na -> refine na <$> prove1 na
+{-# INLINE prove1Refine #-}
+
+prove1RefineS
+  :: forall p a
+  .  (Prove1 p a, Description1 p, Show a)
+  => a
+  -> Either String (a ? p)
+prove1RefineS a = name a $ \na -> refine na <$> prove1S na
+{-# INLINE prove1RefineS #-}
+
+prove1RefineS1
+  :: forall p a
+  .  (Prove1 p a, Description1 p)
+  => a
+  -> Either String (a ? p)
+prove1RefineS1 a = name a $ \na -> refine na <$> prove1S1 na
+{-# INLINE prove1RefineS1 #-}
+
+unsafeProve1RefineS
+  :: forall p a
+  .  (Prove1 p a, Description1 p, Show a)
+  => a
+  -> a ? p
+unsafeProve1RefineS = either error Prelude.id . prove1RefineS
+{-# INLINE unsafeProve1RefineS #-}
+
+unsafeProve1RefineS1
+  :: forall p a
+  .  (Prove1 p a, Description1 p)
+  => a
+  -> a ? p
+unsafeProve1RefineS1 = either error Prelude.id . prove1RefineS1
+{-# INLINE unsafeProve1RefineS1 #-}
+
 rename :: a ? p -> (forall n. n @ a -> Proof (p (n @ a)) -> b) -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# NOINLINE rename #-}
@@ -551,6 +594,18 @@ instance {-# OVERLAPPABLE #-} forall y t.
 
 class Prove1 (f :: Type -> Type) (a :: Type) where
   prove1 :: n @ a -> Maybe (Proof (f (n @ a)))
+
+unsafeProve1S :: forall f a n
+              .  (Prove1 f a, Description1 f, Show a)
+              => n @ a
+              -> Proof (f (n @ a))
+unsafeProve1S = either error Prelude.id . prove1S
+
+unsafeProve1S1 :: forall f a n
+               .  (Prove1 f a, Description1 f)
+               => n @ a
+               -> Proof (f (n @ a))
+unsafeProve1S1 = either error Prelude.id . prove1S1
 
 prove1E :: forall f a n
         .  Prove1 f a
