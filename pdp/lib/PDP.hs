@@ -654,6 +654,36 @@ instance forall a t. (Ord t, NamedI a t) => Prove1 (GT (a @ t)) t where
   prove1 nz | unNamed nz > unNamedI @a @t = Just axiom
             | otherwise = Nothing
 
+instance forall p n.
+  ( Prove1 (p (n @ Integer)) Integer
+  ) => Prove1 (p (n @ Natural)) Integer where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Integer))
+
+instance forall p n.
+  ( Prove1 (p (n @ Rational)) Rational
+  ) => Prove1 (p (n @ Natural)) Rational where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Rational))
+
+instance forall p n.
+  ( Prove1 (p (n @ Natural)) Natural
+  ) => Prove1 (p (n @ Integer)) Natural where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Natural))
+
+instance forall p n.
+  ( Prove1 (p (n @ Rational)) Rational
+  ) => Prove1 (p (n @ Integer)) Rational where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Rational))
+
+instance forall p n.
+  ( Prove1 (p (n @ Natural)) Natural
+  ) => Prove1 (p (n @ Rational)) Natural where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Natural))
+
+instance forall p n.
+  ( Prove1 (p (n @ Integer)) Integer
+  ) => Prove1 (p (n @ Rational)) Integer where
+  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Integer))
+
 --------------------------------------------------------------------------------
 
 class NamedI n a where
