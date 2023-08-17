@@ -56,13 +56,8 @@ module PDP
   , prove1E
   , prove1S
   , prove1S1
-  , prove1Refine
-  , prove1RefineS
-  , prove1RefineS1
   , unsafeProve1S
   , unsafeProve1S1
-  , unsafeProve1RefineS
-  , unsafeProve1RefineS1
 
   , Prove(..)
   , proveE
@@ -108,7 +103,12 @@ module PDP
   , type (?)
   , unsafeRefined
   , unRefined
-  , refine
+  , refined
+  , refinedProve1
+  , refinedProve1S
+  , refinedProve1S1
+  , unsafeRefinedProve1S
+  , unsafeRefinedProve1S1
   , rename
   , forRefined
   , traverseRefined
@@ -352,45 +352,45 @@ pattern Refined :: a -> a ? p
 pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
-refine :: n @ a -> Proof (p (n @ a)) -> a ? p
-refine (Named a) _ = MkRefined a
-{-# INLINE refine #-}
+refined :: n @ a -> Proof (p (n @ a)) -> a ? p
+refined (Named a) _ = MkRefined a
+{-# INLINE refined #-}
 
-prove1Refine :: forall p a. Prove1 p a => a -> Maybe (a ? p)
-prove1Refine a = name a $ \na -> refine na <$> prove1 na
-{-# INLINE prove1Refine #-}
+refinedProve1 :: forall p a. Prove1 p a => a -> Maybe (a ? p)
+refinedProve1 a = name a $ \na -> refined na <$> prove1 na
+{-# INLINE refinedProve1 #-}
 
-prove1RefineS
+refinedProve1S
   :: forall p a
   .  (Prove1 p a, Description1 p, Show a)
   => a
   -> Either String (a ? p)
-prove1RefineS a = name a $ \na -> refine na <$> prove1S na
-{-# INLINE prove1RefineS #-}
+refinedProve1S a = name a $ \na -> refined na <$> prove1S na
+{-# INLINE refinedProve1S #-}
 
-prove1RefineS1
+refinedProve1S1
   :: forall p a
   .  (Prove1 p a, Description1 p)
   => a
   -> Either String (a ? p)
-prove1RefineS1 a = name a $ \na -> refine na <$> prove1S1 na
-{-# INLINE prove1RefineS1 #-}
+refinedProve1S1 a = name a $ \na -> refined na <$> prove1S1 na
+{-# INLINE refinedProve1S1 #-}
 
-unsafeProve1RefineS
+unsafeRefinedProve1S
   :: forall p a
   .  (Prove1 p a, Description1 p, Show a)
   => a
   -> a ? p
-unsafeProve1RefineS = either error Prelude.id . prove1RefineS
-{-# INLINE unsafeProve1RefineS #-}
+unsafeRefinedProve1S = either error Prelude.id . refinedProve1S
+{-# INLINE unsafeRefinedProve1S #-}
 
-unsafeProve1RefineS1
+unsafeRefinedProve1S1
   :: forall p a
   .  (Prove1 p a, Description1 p)
   => a
   -> a ? p
-unsafeProve1RefineS1 = either error Prelude.id . prove1RefineS1
-{-# INLINE unsafeProve1RefineS1 #-}
+unsafeRefinedProve1S1 = either error Prelude.id . refinedProve1S1
+{-# INLINE unsafeRefinedProve1S1 #-}
 
 rename :: a ? p -> (forall n. n @ a -> Proof (p (n @ a)) -> b) -> b
 rename (Refined a) g = g (MkNamed a) axiom
@@ -695,13 +695,13 @@ instance (Show a, Ae.FromJSON a, Prove1 p a, Description1 p)
   => Ae.FromJSON (a ? p) where
   parseJSON = Ae.parseJSON >=> \a ->
               name a $ \(na :: n @ a) ->
-              either fail (pure . refine na) (prove1S na)
+              either fail (pure . refined na) (prove1S na)
 
 instance (Show a, Bin.Binary a, Prove1 p a, Description1 p)
   => Bin.Binary (a ? p) where
   put = Bin.put . unRefined
   get = Bin.get >>= \a ->
         name a $ \(na :: n @ a) ->
-        either fail (pure . refine na) (prove1S na)
+        either fail (pure . refined na) (prove1S na)
 
 
