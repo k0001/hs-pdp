@@ -62,6 +62,8 @@ module PDP
   , Prove(..)
   , proveE
 
+  , Description1(..)
+
   , LT, lt
   , LE, le
   , EQ, eq
