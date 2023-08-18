@@ -109,6 +109,8 @@ module PDP
   , refinedProve1
   , refinedProve1S
   , refinedProve1S1
+  , refinedProve1M
+  , refinedProve1M1
   , unsafeRefinedProve1S
   , unsafeRefinedProve1S1
   , rename
@@ -361,6 +363,25 @@ refined (Named a) _ = MkRefined a
 refinedProve1 :: forall p a. Prove1 p a => a -> Maybe (a ? p)
 refinedProve1 a = name a $ \na -> refined na <$> prove1 na
 {-# INLINE refinedProve1 #-}
+
+refinedProve1M
+  :: forall p a m
+  .  (Prove1 p a, Description1 p, Show a, MonadFail m)
+  => a
+  -> m (a ? p)
+refinedProve1M = either (fail . mappend "refinedProve1M: ") pure
+               . refinedProve1S
+{-# INLINE refinedProve1M #-}
+
+refinedProve1M1
+  :: forall p a m
+  .  (Prove1 p a, Description1 p, MonadFail m)
+  => a
+  -> m (a ? p)
+refinedProve1M1 = either (fail . mappend "refinedProve1M1: ") pure
+                . refinedProve1S1
+{-# INLINE refinedProve1M1 #-}
+
 
 refinedProve1S
   :: forall p a
