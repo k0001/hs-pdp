@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module PDP
@@ -124,6 +125,7 @@ import Control.Monad
 import Data.Aeson qualified as Ae
 import Data.Coerce
 import Data.Binary qualified as Bin
+import Data.Scientific (Scientific)
 import Data.Singletons
 import Data.Kind (Type)
 import GHC.Exts (withDict)
@@ -677,35 +679,27 @@ instance forall a t. (Ord t, NamedI a t) => Prove1 (GT (a @ t)) t where
   prove1 nz | unNamed nz > unNamedI @a @t = Just axiom
             | otherwise = Nothing
 
-instance forall p n.
-  ( Prove1 (p (n @ Integer)) Integer
-  ) => Prove1 (p (n @ Natural)) Integer where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Integer))
+#define INST_PUD(P, U, D) \
+  instance forall n. Prove1 (P (n @ U)) U => Prove1 (P (n @ D)) U where { \
+    prove1 = fmap (Prelude.const axiom) . prove1 @(P (n @ U)); }
 
-instance forall p n.
-  ( Prove1 (p (n @ Rational)) Rational
-  ) => Prove1 (p (n @ Natural)) Rational where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Rational))
+#define INST_ORD_UD(U, D) \
+   INST_PUD(LT, U, D); \
+   INST_PUD(EQ, U, D); \
+   INST_PUD(GT, U, D);
 
-instance forall p n.
-  ( Prove1 (p (n @ Natural)) Natural
-  ) => Prove1 (p (n @ Integer)) Natural where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Natural))
-
-instance forall p n.
-  ( Prove1 (p (n @ Rational)) Rational
-  ) => Prove1 (p (n @ Integer)) Rational where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Rational))
-
-instance forall p n.
-  ( Prove1 (p (n @ Natural)) Natural
-  ) => Prove1 (p (n @ Rational)) Natural where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Natural))
-
-instance forall p n.
-  ( Prove1 (p (n @ Integer)) Integer
-  ) => Prove1 (p (n @ Rational)) Integer where
-  prove1 = fmap (Prelude.const axiom) . prove1 @(p (n @ Integer))
+INST_ORD_UD(Natural    , Integer)
+INST_ORD_UD(Natural    , Rational)
+INST_ORD_UD(Natural    , Scientific)
+INST_ORD_UD(Integer    , Natural)
+INST_ORD_UD(Integer    , Rational)
+INST_ORD_UD(Integer    , Scientific)
+INST_ORD_UD(Rational   , Natural)
+INST_ORD_UD(Rational   , Integer)
+INST_ORD_UD(Rational   , Scientific)
+INST_ORD_UD(Scientific , Natural)
+INST_ORD_UD(Scientific , Integer)
+INST_ORD_UD(Scientific , Rational)
 
 --------------------------------------------------------------------------------
 
@@ -727,11 +721,17 @@ instance forall n. KnownNat n => NamedI n Integer where
 instance forall n. KnownNat n => NamedI n Rational where
   namedI = unsafeNamed (fromIntegral (demote @n))
 
+instance forall n. KnownNat n => NamedI n Scientific where
+  namedI = unsafeNamed (fromIntegral (demote @n))
+
 instance forall n. (KI.KnownInteger n, KI.FromNatural 0 <= n)
   => NamedI n Natural where
   namedI = unsafeNamed (demote @(KI.Abs n))
 
 instance forall n. KI.KnownInteger n => NamedI n Rational where
+  namedI = unsafeNamed (fromIntegral (demote @n))
+
+instance forall n. KI.KnownInteger n => NamedI n Scientific where
   namedI = unsafeNamed (fromIntegral (demote @n))
 
 instance forall n. (KR.KnownRational n, KR.Den n ~ 1, KI.FromNatural 0 <= KR.Num n)
@@ -741,6 +741,10 @@ instance forall n. (KR.KnownRational n, KR.Den n ~ 1, KI.FromNatural 0 <= KR.Num
 instance forall n. (KR.KnownRational n, KR.Den n ~ 1)
   => NamedI n Integer where
   namedI = unsafeNamed (demote @(KR.Num n))
+
+instance forall n. (KR.KnownRational n, KR.Terminating n)
+  => NamedI n Scientific where
+  namedI = unsafeNamed (fromRational (demote @n))
 
 --------------------------------------------------------------------------------
 

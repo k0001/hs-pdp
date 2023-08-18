@@ -43,6 +43,7 @@ library
     kind-integer,
     kind-rational,
     singletons,
+    scientific,
 
 test-suite test
   import: basic

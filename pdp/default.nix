@@ -1,12 +1,12 @@
 { mkDerivation, aeson, base, binary, kind-integer, kind-rational
-, lib, singletons
+, lib, singletons, scientific
 }:
 mkDerivation {
   pname = "pdp";
   version = "0.1.0";
   src = ./.;
   libraryHaskellDepends = [
-    aeson base binary kind-integer kind-rational singletons
+    aeson base binary kind-integer kind-rational singletons scientific
   ];
   testHaskellDepends = [ base ];
   homepage = "https://github.com/k0001/hs-pdp";
