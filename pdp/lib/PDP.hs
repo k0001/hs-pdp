@@ -338,29 +338,29 @@ withNamedI na b = withDict @(NamedI n a) @(n @ a) na b
 
 --------------------------------------------------------------------------------
 
-newtype Refined (a :: Type) (p :: Type -> Type) = MkRefined a
+newtype Refined (p :: Type -> Type) (a :: Type) = MkRefined a
   deriving newtype (Eq, Ord, Show, Ae.ToJSON)
 
-type role Refined representational nominal
+type role Refined nominal representational
 type (?) = Refined
 
-unsafeRefined :: forall p a. a -> a ? p
+unsafeRefined :: forall p a. a -> p ? a
 unsafeRefined = coerce
 {-# INLINE unsafeRefined #-}
 
-unRefined :: a ? p -> a
+unRefined :: forall p a. p ? a -> a
 unRefined = coerce
 {-# INLINE unRefined #-}
 
-pattern Refined :: a -> a ? p
+pattern Refined :: forall p a. a -> p ? a
 pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
-refined :: n @ a -> Proof (p (n @ a)) -> a ? p
+refined :: forall p n a. n @ a -> Proof (p (n @ a)) -> p ? a
 refined (Named a) _ = MkRefined a
 {-# INLINE refined #-}
 
-refinedProve1 :: forall p a. Prove1 p a => a -> Maybe (a ? p)
+refinedProve1 :: forall p a. Prove1 p a => a -> Maybe (p ? a)
 refinedProve1 a = name a $ \na -> refined na <$> prove1 na
 {-# INLINE refinedProve1 #-}
 
@@ -368,7 +368,7 @@ refinedProve1M
   :: forall p a m
   .  (Prove1 p a, Description1 p, Show a, MonadFail m)
   => a
-  -> m (a ? p)
+  -> m (p ? a)
 refinedProve1M = either (fail . mappend "refinedProve1M: ") pure
                . refinedProve1S
 {-# INLINE refinedProve1M #-}
@@ -377,7 +377,7 @@ refinedProve1M1
   :: forall p a m
   .  (Prove1 p a, Description1 p, MonadFail m)
   => a
-  -> m (a ? p)
+  -> m (p ? a)
 refinedProve1M1 = either (fail . mappend "refinedProve1M1: ") pure
                 . refinedProve1S1
 {-# INLINE refinedProve1M1 #-}
@@ -387,7 +387,7 @@ refinedProve1S
   :: forall p a
   .  (Prove1 p a, Description1 p, Show a)
   => a
-  -> Either String (a ? p)
+  -> Either String (p ? a)
 refinedProve1S a = name a $ \na -> refined na <$> prove1S na
 {-# INLINE refinedProve1S #-}
 
@@ -395,7 +395,7 @@ refinedProve1S1
   :: forall p a
   .  (Prove1 p a, Description1 p)
   => a
-  -> Either String (a ? p)
+  -> Either String (p ? a)
 refinedProve1S1 a = name a $ \na -> refined na <$> prove1S1 na
 {-# INLINE refinedProve1S1 #-}
 
@@ -403,7 +403,7 @@ unsafeRefinedProve1S
   :: forall p a
   .  (Prove1 p a, Description1 p, Show a)
   => a
-  -> a ? p
+  -> p ? a
 unsafeRefinedProve1S = either error Prelude.id . refinedProve1S
 {-# INLINE unsafeRefinedProve1S #-}
 
@@ -411,25 +411,25 @@ unsafeRefinedProve1S1
   :: forall p a
   .  (Prove1 p a, Description1 p)
   => a
-  -> a ? p
+  -> p ? a
 unsafeRefinedProve1S1 = either error Prelude.id . refinedProve1S1
 {-# INLINE unsafeRefinedProve1S1 #-}
 
-rename :: a ? p -> (forall n. n @ a -> Proof (p (n @ a)) -> b) -> b
+rename :: p ? a -> (forall n. n @ a -> Proof (p (n @ a)) -> b) -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# NOINLINE rename #-}
 
 traverseRefined
   :: (Traversable t, Applicative f)
   => (forall n. n @ a -> Proof (p (n @ a)) -> f b)
-  -> t (a ? p)
+  -> t (p ? a)
   -> f (t b)
 traverseRefined g = traverse (\r -> rename r g)
 {-# INLINE traverseRefined #-}
 
 forRefined
   :: (Traversable t, Applicative f)
-  => t (a ? p)
+  => t (p ? a)
   -> (forall n. n @ a -> Proof (p (n @ a)) -> f b)
   -> f (t b)
 forRefined t g = traverseRefined g t
@@ -745,13 +745,13 @@ instance forall n. (KR.KnownRational n, KR.Den n ~ 1)
 --------------------------------------------------------------------------------
 
 instance (Show a, Ae.FromJSON a, Prove1 p a, Description1 p)
-  => Ae.FromJSON (a ? p) where
+  => Ae.FromJSON (p ? a) where
   parseJSON = Ae.parseJSON >=> \a ->
               name a $ \(na :: n @ a) ->
               either fail (pure . refined na) (prove1S na)
 
 instance (Show a, Bin.Binary a, Prove1 p a, Description1 p)
-  => Bin.Binary (a ? p) where
+  => Bin.Binary (p ? a) where
   put = Bin.put . unRefined
   get = Bin.get >>= \a ->
         name a $ \(na :: n @ a) ->
