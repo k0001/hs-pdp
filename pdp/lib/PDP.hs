@@ -699,7 +699,7 @@ toJSON' f = f . unRefined
 
 parseJSON
   :: forall p a
-  .  (Ae.FromJSON a)
+  .  Ae.FromJSON a
   => (forall n. n @ a -> Either String (Proof (p n)))
   -> Ae.Value
   -> Ae.Parser (a ? p)
@@ -715,6 +715,13 @@ parseJSON' gma f =
   gma >=> \a ->
   name a $ \na ->
   either fail (pure . refine na) (f na)
+
+parserJSON
+  :: forall p a
+  .  Ae.Parser a
+  -> (forall n. n @ a -> Either String (Proof (p n)))
+  -> Ae.Parser (a ? p)
+parserJSON ma f = parseJSON' (\_ -> ma) f Ae.Null
 
 --------------------------------------------------------------------------------
 
