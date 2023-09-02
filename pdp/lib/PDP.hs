@@ -363,9 +363,9 @@ refinedProve1 :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
 refinedProve1 a = name a $ \na -> refine na <$> hush (prove1 na)
 {-# INLINE refinedProve1 #-}
 
-rename :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+rename :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type)
        .  a ? p
-       -> (forall n. n @ a -> Proof (p n) -> b)
+       -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
        -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# NOINLINE rename #-}
