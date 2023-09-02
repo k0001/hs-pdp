@@ -349,15 +349,24 @@ pattern Refined :: forall p a. a -> a ? p
 pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
-refine :: forall p n a. n @ a -> Proof (p n) -> a ? p
+refine :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) (a :: Type)
+       .  n @ a
+       -> Proof (p n)
+       -> a ? p
 refine (Named a) _ = MkRefined a
 {-# INLINE refine #-}
 
-refinedProve1 :: forall p a. Prove1 p a => a -> Maybe (a ? p)
+refinedProve1 :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+              .  Prove1 p a
+              => a
+              -> Maybe (a ? p)
 refinedProve1 a = name a $ \na -> refine na <$> hush (prove1 na)
 {-# INLINE refinedProve1 #-}
 
-rename :: a ? p -> (forall n. n @ a -> Proof (p n) -> b) -> b
+rename :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+       .  a ? p
+       -> (forall n. n @ a -> Proof (p n) -> b)
+       -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# NOINLINE rename #-}
 
@@ -615,7 +624,7 @@ prove1 = prove1'
 {-# INLINE prove1 #-}
 
 prove1M
-  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) m
+  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) (m :: Type -> Type)
   .  (Prove1 p a, Description1 p, MonadFail m)
   => n @ a
   -> m (Proof (p n))
