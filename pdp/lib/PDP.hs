@@ -322,12 +322,12 @@ pattern Named :: forall n a. a -> n @ a
 pattern Named a <- (unNamed -> a)
 {-# COMPLETE Named #-}
 
-name :: forall a b. a -> (forall n. n @ a -> b) -> b
-name a f = withNamed a f
-
-withNamed :: forall a b. a -> (forall n. n @ a -> b) -> b
-withNamed a f = f (MkNamed a)
-{-# NOINLINE withNamed #-}
+name :: forall {kn} (a :: Type) (b :: Type)
+     .  a
+     -> (forall (n :: kn). n @ a -> b)
+     -> b
+name a f = f (MkNamed a)
+{-# NOINLINE name #-}
 
 --------------------------------------------------------------------------------
 
@@ -355,6 +355,13 @@ refine :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) (a :: Type)
        -> a ? p
 refine (Named a) _ = MkRefined a
 {-# INLINE refine #-}
+
+refined :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+        .  a
+        -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+        -> Maybe (a ? p)
+refined a f = name a $ \na -> refine na <$> f na
+{-# INLINE refined #-}
 
 refinedProve1 :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
               .  Prove1 p a
