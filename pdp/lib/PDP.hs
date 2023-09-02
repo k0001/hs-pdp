@@ -118,21 +118,18 @@ module PDP {--
   )  --}
   where
 
-import Control.Applicative
 import Control.Monad
 import Data.Aeson qualified as Ae
 import Data.Aeson.Types qualified as Ae
-import Data.Coerce
+import Data.Bifunctor
 import Data.Binary qualified as Bin
-import Data.Scientific (Scientific)
-import Data.Singletons
+import Data.Coerce
+import Data.Int
 import Data.Kind (Type)
-import GHC.TypeLits (type (<=))
-import GHC.TypeNats (KnownNat)
-import KindInteger qualified as KI
-import KindRational qualified as KR
-import Numeric.Natural
+import Data.Singletons
+import Data.Word
 import GHC.Show (appPrec1)
+import Numeric.Natural
 
 --------------------------------------------------------------------------------
 
@@ -572,31 +569,37 @@ instance forall p q. (Prove p, Prove q) => Prove (OR p q) where
 
 -------------------------------------------------------------------------------
 
--- class Description1 (f :: Type -> Type) where
---   description1 :: ShowS
---
--- instance forall p. Description1 p => Description1 (NOT1 p) where
---   description1 = showString "not (" . description1 @p . showChar ')'
---
--- instance forall l r. (Description1 l, Description1 r) => Description1 (AND1 l r) where
---   description1 = showChar '(' . description1 @l . showString ") and ("
---                . description1 @r . showChar ')'
---
--- instance forall l r. (Description1 l, Description1 r) => Description1 (OR1 l r) where
---   description1 = showChar '(' . description1 @l . showString ") or ("
---                . description1 @r . showChar ')'
---
--- instance {-# OVERLAPPABLE #-} forall a t.
---   (NamedI a t, Show t) => Description1 (GT (a @ t)) where
---   description1 = showString "more than " . showsPrec appPrec1 (unNamedI @a @t)
---
--- instance {-# OVERLAPPABLE #-} forall z t.
---   (NamedI z t, Show t) => Description1 (LT (z @ t)) where
---   description1 = showString "less than " . showsPrec appPrec1 (unNamedI @z @t)
---
--- instance {-# OVERLAPPABLE #-} forall y t.
---   (NamedI y t, Show t) => Description1 (EQ (y @ t)) where
---   description1 = showString "equal to " . showsPrec appPrec1 (unNamedI @y @t)
+description1 :: forall {kn} {kp} (p :: kn -> kp). Description1 p => ShowS
+description1 = description1' @kn @kp @p
+{-# INLINE description1 #-}
+
+class Description1 (p :: kn -> kp) where
+  description1' :: ShowS
+
+instance forall p. Description1 p => Description1 (NOT1 p) where
+  description1' = showString "not (" . description1 @p . showChar ')'
+
+instance forall l r. (Description1 l, Description1 r)
+  => Description1 (AND1 l r) where
+  description1' = showChar '(' . description1 @l . showString ") and ("
+                . description1 @r . showChar ')'
+
+instance forall l r. (Description1 l, Description1 r)
+  => Description1 (OR1 l r) where
+  description1' = showChar '(' . description1 @l . showString ") or ("
+                . description1 @r . showChar ')'
+
+instance {-# OVERLAPPABLE #-} forall k n.
+  (SingKind k, SingI n, Show (Demote k)) => Description1 (GT (n :: k)) where
+  description1' = showString "more than " . showsPrec appPrec1 (demote @n)
+
+instance {-# OVERLAPPABLE #-} forall k n.
+  (SingKind k, SingI n, Show (Demote k)) => Description1 (LT (n :: k)) where
+  description1' = showString "less than " . showsPrec appPrec1 (demote @n)
+
+instance {-# OVERLAPPABLE #-} forall k n.
+  (SingKind k, SingI n, Show (Demote k)) => Description1 (EQ (n :: k)) where
+  description1' = showString "equal to " . showsPrec appPrec1 (demote @n)
 
 --------------------------------------------------------------------------------
 
@@ -611,21 +614,37 @@ prove1
 prove1 = prove1'
 {-# INLINE prove1 #-}
 
+prove1M
+  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) m
+  .  (Prove1 p a, Description1 p, MonadFail m)
+  => n @ a
+  -> m (Proof (p n))
+prove1M = either (\_ -> fail (description1 @p "")) pure . prove1
+
+prove1S
+  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)
+  .  (Prove1 p a, Description1 p)
+  => n @ a
+  -> Either String (Proof (p n))
+prove1S = first (\_ -> description1 @p "") . prove1
+
 instance Prove1 p a => Prove1 (NOT1 p) a where
-  prove1' na | Left _ <- prove1 @p @a na = Right axiom
-             | otherwise                 = Left  axiom
+  prove1' na = case prove1 @p @a na of
+                Left _ -> Right axiom
+                _      -> Left  axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (AND1 f g) a where
   prove1' na = case (prove1 @f @a na, prove1 @g @a na) of
-    (Right fna, Right gna) -> Right (and1 $* (PDP.and $* fna $* gna))
-    _ -> Left axiom
-
+    (Right _, Right _) -> Right axiom
+    _                  -> Left axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (OR1 f g) a where
   prove1' na = case (prove1 @f @a na, prove1 @g @a na) of
     (Right _, _) -> Right axiom
     (_, Right _) -> Right axiom
     _            -> Left  axiom
+
+--------------------------------------------------------------------------------
 
 instance Ord x => Prove2 LT x x where
   prove2' nz na
@@ -642,16 +661,20 @@ instance Ord x => Prove2 EQ x x where
     | unNamed nb == unNamed na = Right axiom
     | otherwise = Left axiom
 
+
+unsafeMapNamed :: (a -> b) -> n @ a -> n @ b
+unsafeMapNamed f (Named a) = unsafeNamed (f a)
+
 instance forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) (b :: Type).
   ( SingKind ka
   , SingI na
   , Prove2 p (Demote ka) b
   ) => Prove1 (p na) b where
-  prove1' = prove2 (demoteNamed @na)
+  prove1' = prove2 (namedDemote @na)
   {-# INLINE prove1' #-}
 
-demoteNamed :: forall {k} (n :: k). (SingKind k, SingI n) => n @ Demote k
-demoteNamed = unsafeNamed (demote @n)
+namedDemote :: forall {k} (n :: k). (SingKind k, SingI n) => n @ Demote k
+namedDemote = unsafeNamed (demote @n)
 
 class Prove2 (p :: kna -> knb -> kpnanb) (a :: Type) (b :: Type) where
   prove2' :: na @ a -> nb @ b -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
@@ -666,28 +689,57 @@ prove2
 prove2 = prove2'
 {-# INLINE prove2 #-}
 
+--------------------------------------------------------------------------------
 
--- #define INST_PUD(P, U, D) \
---   instance forall n. Prove1 (P n) U => Prove1 (P n) U where { \
---     prove1' = fmap (Prelude.const axiom) . prove1 @(P n); }
---
--- #define INST_ORD_UD(U, D) \
---    INST_PUD(LT, U, D); \
---    INST_PUD(EQ, U, D); \
---    INST_PUD(GT, U, D);
---
--- INST_ORD_UD(Natural    , Integer)
--- INST_ORD_UD(Natural    , Rational)
--- INST_ORD_UD(Natural    , Scientific)
--- INST_ORD_UD(Integer    , Natural)
--- INST_ORD_UD(Integer    , Rational)
--- INST_ORD_UD(Integer    , Scientific)
--- INST_ORD_UD(Rational   , Natural)
--- INST_ORD_UD(Rational   , Integer)
--- INST_ORD_UD(Rational   , Scientific)
--- INST_ORD_UD(Scientific , Natural)
--- INST_ORD_UD(Scientific , Integer)
--- INST_ORD_UD(Scientific , Rational)
+#define INST_VIA_RATIONAL(D) \
+  instance Prove2 p Rational Rational => Prove2 p Rational D where { \
+    prove2' na = prove2' na . unsafeMapNamed toRational; \
+    {-# INLINE prove2' #-}; \
+  }; \
+  instance Prove2 p Rational Rational => Prove2 p D Rational where { \
+    prove2' = prove2' . unsafeMapNamed toRational; \
+    {-# INLINE prove2' #-}; \
+  };
+
+INST_VIA_RATIONAL(Integer)
+INST_VIA_RATIONAL(Float)
+INST_VIA_RATIONAL(Double)
+
+#define INST_VIA_INTEGER(D) \
+  INST_VIA_RATIONAL(D); \
+  instance Prove2 p Integer Integer => Prove2 p Integer D where { \
+    prove2' na = prove2' na . unsafeMapNamed toInteger; \
+    {-# INLINE prove2' #-}; \
+  }; \
+  instance Prove2 p Integer Integer \
+    => Prove2 p D Integer where { \
+    prove2' = prove2' . unsafeMapNamed toInteger; \
+    {-# INLINE prove2' #-}; \
+  };
+
+INST_VIA_INTEGER(Natural)
+INST_VIA_INTEGER(Int)
+INST_VIA_INTEGER(Int8)
+INST_VIA_INTEGER(Int16)
+INST_VIA_INTEGER(Int32)
+INST_VIA_INTEGER(Int64)
+
+#define INST_VIA_NATURAL(D) \
+  INST_VIA_INTEGER(D); \
+  instance Prove2 p Natural Natural => Prove2 p Natural D where { \
+    prove2' na = prove2' na . unsafeMapNamed (fromIntegral @D @Natural); \
+    {-# INLINE prove2' #-}; \
+  }; \
+  instance Prove2 p Natural Natural => Prove2 p D Natural where { \
+    prove2' = prove2' . unsafeMapNamed (fromIntegral @D @Natural); \
+    {-# INLINE prove2' #-}; \
+  };
+
+INST_VIA_NATURAL(Word)
+INST_VIA_NATURAL(Word8)
+INST_VIA_NATURAL(Word16)
+INST_VIA_NATURAL(Word32)
+INST_VIA_NATURAL(Word64)
 
 --------------------------------------------------------------------------------
 
@@ -721,7 +773,11 @@ parserJSON
   .  Ae.Parser a
   -> (forall n. n @ a -> Either String (Proof (p n)))
   -> Ae.Parser (a ? p)
-parserJSON ma f = parseJSON' (\_ -> ma) f Ae.Null
+parserJSON ma f = parseJSON' (\_undefined -> ma) f undefined
+
+instance forall p a. (Ae.FromJSON a, Prove1 p a, Description1 p)
+  => Ae.FromJSON (a ? p) where
+  parseJSON = parseJSON prove1S
 
 --------------------------------------------------------------------------------
 
@@ -733,7 +789,7 @@ putBin' f = f . unRefined
 
 getBin
   :: forall p a
-  .  (Bin.Binary a)
+  .  Bin.Binary a
   => (forall n. n @ a -> Either String (Proof (p n)))
   -> Bin.Get (a ? p)
 getBin = getBin' Bin.get
@@ -747,6 +803,11 @@ getBin' ma f =
   ma >>= \a ->
   name a $ \(na :: n @ a) ->
   either fail (pure . refine na) (f na)
+
+instance forall p a. (Bin.Binary a, Prove1 p a, Description1 p)
+  => Bin.Binary (a ? p) where
+  put = putBin
+  get = getBin prove1S
 
 --------------------------------------------------------------------------------
 
