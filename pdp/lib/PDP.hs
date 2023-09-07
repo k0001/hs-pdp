@@ -306,7 +306,8 @@ unNOT1 = axiom
 --------------------------------------------------------------------------------
 
 newtype Named (n :: k) (a :: Type) = MkNamed a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField)
+  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField, Csv.ToRecord,
+                    Csv.DefaultOrdered)
 
 type role Named nominal representational
 type (@) = Named
@@ -333,7 +334,8 @@ name a f = f (MkNamed a)
 --------------------------------------------------------------------------------
 
 newtype Refined (p :: kn -> kp) (a :: Type) = MkRefined a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField)
+  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField, Csv.ToRecord,
+                    Csv.DefaultOrdered)
 
 type role Refined nominal representational
 type a ? p = Refined p a
@@ -773,6 +775,11 @@ instance forall p a. (Csv.FromField a, Prove1 p a, Description1 p)
                name a $ \na ->
                either fail (pure . refine na) (prove1S na)
 
+instance forall p a. (Csv.FromRecord a, Prove1 p a, Description1 p)
+  => Csv.FromRecord (a ? p) where
+  parseRecord = Csv.parseRecord >=> \a ->
+               name a $ \na ->
+               either fail (pure . refine na) (prove1S na)
 
 --------------------------------------------------------------------------------
 
