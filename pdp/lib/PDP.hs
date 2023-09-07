@@ -120,10 +120,10 @@ module PDP {--
 
 import Control.Monad
 import Data.Aeson qualified as Ae
-import Data.Aeson.Types qualified as Ae
 import Data.Bifunctor
 import Data.Binary qualified as Bin
 import Data.Coerce
+import Data.Csv qualified as Csv
 import Data.Int
 import Data.Kind (Type)
 import Data.Singletons
@@ -306,7 +306,7 @@ unNOT1 = axiom
 --------------------------------------------------------------------------------
 
 newtype Named (n :: k) (a :: Type) = MkNamed a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON)
+  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField)
 
 type role Named nominal representational
 type (@) = Named
@@ -333,7 +333,7 @@ name a f = f (MkNamed a)
 --------------------------------------------------------------------------------
 
 newtype Refined (p :: kn -> kp) (a :: Type) = MkRefined a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON)
+  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField)
 
 type role Refined nominal representational
 type a ? p = Refined p a
@@ -767,71 +767,29 @@ INST_VIA_NATURAL(Word64)
 
 --------------------------------------------------------------------------------
 
-toJSON :: forall p a. (Ae.ToJSON a) => a ? p -> Ae.Value
-toJSON = toJSON' Ae.toJSON
+instance forall p a. (Csv.FromField a, Prove1 p a, Description1 p)
+  => Csv.FromField (a ? p) where
+  parseField = Csv.parseField >=> \a ->
+               name a $ \na ->
+               either fail (pure . refine na) (prove1S na)
 
-toJSON' :: forall p a. (a -> Ae.Value) -> a ? p -> Ae.Value
-toJSON' f = f . unRefined
-
-parseJSON
-  :: forall p a
-  .  Ae.FromJSON a
-  => (forall n. n @ a -> Either String (Proof (p n)))
-  -> Ae.Value
-  -> Ae.Parser (a ? p)
-parseJSON = parseJSON' Ae.parseJSON
-
-parseJSON'
-  :: forall p a
-  .  (Ae.Value -> Ae.Parser a)
-  -> (forall n. n @ a -> Either String (Proof (p n)))
-  -> Ae.Value
-  -> Ae.Parser (a ? p)
-parseJSON' gma f =
-  gma >=> \a ->
-  name a $ \na ->
-  either fail (pure . refine na) (f na)
-
-parserJSON
-  :: forall p a
-  .  Ae.Parser a
-  -> (forall n. n @ a -> Either String (Proof (p n)))
-  -> Ae.Parser (a ? p)
-parserJSON ma f = parseJSON' (\_undefined -> ma) f undefined
-
-instance forall p a. (Ae.FromJSON a, Prove1 p a, Description1 p)
-  => Ae.FromJSON (a ? p) where
-  parseJSON = parseJSON prove1S
 
 --------------------------------------------------------------------------------
 
-putBin :: forall p a. (Bin.Binary a) => a ? p -> Bin.Put
-putBin = putBin' Bin.put
+instance forall p a. (Ae.FromJSON a, Prove1 p a, Description1 p)
+  => Ae.FromJSON (a ? p) where
+  parseJSON = Ae.parseJSON >=> \a ->
+              name a $ \na ->
+              either fail (pure . refine na) (prove1S na)
 
-putBin' :: forall p a. (a -> Bin.Put) -> a ? p -> Bin.Put
-putBin' f = f . unRefined
-
-getBin
-  :: forall p a
-  .  Bin.Binary a
-  => (forall n. n @ a -> Either String (Proof (p n)))
-  -> Bin.Get (a ? p)
-getBin = getBin' Bin.get
-
-getBin'
-  :: forall p a
-  .  Bin.Get a
-  -> (forall n. n @ a -> Either String (Proof (p n)))
-  -> Bin.Get (a ? p)
-getBin' ma f =
-  ma >>= \a ->
-  name a $ \(na :: n @ a) ->
-  either fail (pure . refine na) (f na)
+--------------------------------------------------------------------------------
 
 instance forall p a. (Bin.Binary a, Prove1 p a, Description1 p)
   => Bin.Binary (a ? p) where
-  put = putBin
-  get = getBin prove1S
+  put = Bin.put . unRefined
+  get = Bin.get >>= \a ->
+        name a $ \na ->
+        either fail (pure . refine na) (prove1S na)
 
 --------------------------------------------------------------------------------
 
