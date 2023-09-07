@@ -127,6 +127,7 @@ import Data.Coerce
 import Data.Int
 import Data.Kind (Type)
 import Data.Singletons
+import Data.Tagged
 import Data.Word
 import GHC.Show (appPrec1)
 import Numeric.Natural
@@ -660,6 +661,9 @@ instance (Prove1 f a, Prove1 g a) => Prove1 (OR1 f g) a where
     (_, Right _) -> Right axiom
     _            -> Left  axiom
 
+instance (Prove1 p a) => Prove1 p (Tagged x a) where
+  prove1' = prove1' . unsafeMapNamed unTagged
+
 --------------------------------------------------------------------------------
 
 instance Ord x => Prove2 LT x x where
@@ -704,6 +708,10 @@ prove2
   -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 prove2 = prove2'
 {-# INLINE prove2 #-}
+
+instance Prove2 p a b => Prove2 p (Tagged x a) (Tagged y b) where
+  prove2' nta ntb = prove2' (unsafeMapNamed unTagged nta)
+                            (unsafeMapNamed unTagged ntb)
 
 --------------------------------------------------------------------------------
 
