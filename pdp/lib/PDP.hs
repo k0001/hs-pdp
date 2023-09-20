@@ -939,60 +939,6 @@ instance (Prove2 p a b) => Prove2 p (Tagged x a) (Tagged y b) where
 
 --------------------------------------------------------------------------------
 
-#define INST_VIA_RATIONAL(D) \
-  instance Prove2 p Rational Rational => Prove2 p Rational D where { \
-    prove2E' = \nta ntb -> prove2E' nta (unsafeMapNamed toRational ntb); \
-    {-# INLINE prove2E' #-}; \
-  }; \
-  instance Prove2 p Rational Rational => Prove2 p D Rational where { \
-    prove2E' = \nta ntb -> prove2E' (unsafeMapNamed toRational nta) ntb; \
-    {-# INLINE prove2E' #-}; \
-  };
-
-INST_VIA_RATIONAL (Integer)
-INST_VIA_RATIONAL (Float)
-INST_VIA_RATIONAL (Double)
-
-#define INST_VIA_INTEGER(D) \
-  INST_VIA_RATIONAL(D); \
-  instance Prove2 p Integer Integer => Prove2 p Integer D where { \
-    prove2E' = \nta ntb -> prove2E' nta (unsafeMapNamed toInteger ntb); \
-    {-# INLINE prove2E' #-}; \
-  }; \
-  instance Prove2 p Integer Integer \
-    => Prove2 p D Integer where { \
-    prove2E' = \nta ntb -> prove2E' (unsafeMapNamed toInteger nta) ntb; \
-    {-# INLINE prove2E' #-}; \
-  };
-
-INST_VIA_INTEGER (Natural)
-INST_VIA_INTEGER (Int)
-INST_VIA_INTEGER (Int8)
-INST_VIA_INTEGER (Int16)
-INST_VIA_INTEGER (Int32)
-INST_VIA_INTEGER (Int64)
-
-#define INST_VIA_NATURAL(D) \
-  INST_VIA_INTEGER(D); \
-  instance Prove2 p Natural Natural => Prove2 p Natural D where { \
-    prove2E' = \nta ntb -> \
-      prove2E' nta (unsafeMapNamed (fromIntegral @D @Natural) ntb); \
-    {-# INLINE prove2E' #-}; \
-  }; \
-  instance Prove2 p Natural Natural => Prove2 p D Natural where { \
-    prove2E' = \nta ntb -> \
-      prove2E' (unsafeMapNamed (fromIntegral @D @Natural) nta) ntb; \
-    {-# INLINE prove2E' #-}; \
-  };
-
-INST_VIA_NATURAL (Word)
-INST_VIA_NATURAL (Word8)
-INST_VIA_NATURAL (Word16)
-INST_VIA_NATURAL (Word32)
-INST_VIA_NATURAL (Word64)
-
---------------------------------------------------------------------------------
-
 instance
   (Csv.FromField a, Prove1 p a, Description1 p)
   => Csv.FromField (a ? p)
@@ -1023,3 +969,97 @@ instance (Bin.Binary a, Prove1 p a, Description1 p) => Bin.Binary (a ? p) where
   {-# INLINE put #-}
   get = Bin.get >>= refine1F
   {-# INLINE get #-}
+
+--------------------------------------------------------------------------------
+
+#define INST_VIA(D, U, f) \
+  instance PDP.Prove2 p U U => PDP.Prove2 p D U where { \
+    prove2E' = \nta ntb -> \
+      PDP.prove2E' (PDP.unsafeMapNamed (f :: D -> U) nta) ntb; \
+    {-# INLINE prove2E' #-}; \
+  }; \
+  instance PDP.Prove2 p U U => PDP.Prove2 p U D where { \
+    prove2E' = \nta ntb -> \
+      PDP.prove2E' nta (PDP.unsafeMapNamed (f :: D -> U) ntb); \
+    {-# INLINE prove2E' #-}; \
+  };
+
+INST_VIA(Int, Int64, fromIntegral)
+INST_VIA(Int, Integer, fromIntegral)
+INST_VIA(Int, Rational, fromIntegral)
+
+INST_VIA(Int8, Int16, fromIntegral)
+INST_VIA(Int8, Int32, fromIntegral)
+INST_VIA(Int8, Int64, fromIntegral)
+INST_VIA(Int8, Integer, fromIntegral)
+INST_VIA(Int8, Float, fromIntegral)
+INST_VIA(Int8, Double, fromIntegral)
+INST_VIA(Int8, Rational, fromIntegral)
+
+INST_VIA(Int16, Int32, fromIntegral)
+INST_VIA(Int16, Int64, fromIntegral)
+INST_VIA(Int16, Integer, fromIntegral)
+INST_VIA(Int16, Float, fromIntegral)
+INST_VIA(Int16, Double, fromIntegral)
+INST_VIA(Int16, Rational, fromIntegral)
+
+INST_VIA(Int32, Int64, fromIntegral)
+INST_VIA(Int32, Integer, fromIntegral)
+INST_VIA(Int32, Double, fromIntegral)
+INST_VIA(Int32, Rational, fromIntegral)
+
+INST_VIA(Int64, Integer, fromIntegral)
+INST_VIA(Int64, Rational, fromIntegral)
+
+INST_VIA(Word, Integer, fromIntegral)
+INST_VIA(Word, Natural, fromIntegral)
+INST_VIA(Word, Word64, fromIntegral)
+INST_VIA(Word, Rational, fromIntegral)
+
+INST_VIA(Word8, Integer, fromIntegral)
+INST_VIA(Word8, Natural, fromIntegral)
+INST_VIA(Word8, Word16, fromIntegral)
+INST_VIA(Word8, Word32, fromIntegral)
+INST_VIA(Word8, Word64, fromIntegral)
+INST_VIA(Word8, Float, fromIntegral)
+INST_VIA(Word8, Double, fromIntegral)
+INST_VIA(Word8, Rational, fromIntegral)
+
+INST_VIA(Word16, Integer, fromIntegral)
+INST_VIA(Word16, Natural, fromIntegral)
+INST_VIA(Word16, Word32, fromIntegral)
+INST_VIA(Word16, Word64, fromIntegral)
+INST_VIA(Word16, Float, fromIntegral)
+INST_VIA(Word16, Double, fromIntegral)
+INST_VIA(Word16, Rational, fromIntegral)
+
+INST_VIA(Word32, Integer, fromIntegral)
+INST_VIA(Word32, Natural, fromIntegral)
+INST_VIA(Word32, Word64, fromIntegral)
+INST_VIA(Word32, Double, fromIntegral)
+INST_VIA(Word32, Rational, fromIntegral)
+
+INST_VIA(Word64, Integer, fromIntegral)
+INST_VIA(Word64, Natural, fromIntegral)
+INST_VIA(Word64, Rational, fromIntegral)
+
+INST_VIA(Float, Double, realToFrac)
+INST_VIA(Float, Rational, realToFrac)
+
+INST_VIA(Double, Rational, realToFrac)
+
+#if WORD_SIZE_IN_BITS == 64
+INST_VIA(Word64, Word, fromIntegral)
+INST_VIA(Int64, Int, fromIntegral)
+#elif WORD_SIZE_IN_BITS == 32
+INST_VIA(Int, Double, fromIntegral)
+INST_VIA(Int, Int32, fromIntegral)
+INST_VIA(Word, Word32, fromIntegral)
+INST_VIA(Word, Double, fromIntegral)
+#endif
+
+INST_VIA(Natural, Integer, fromIntegral)
+INST_VIA(Natural, Rational, fromIntegral)
+
+INST_VIA(Integer, Rational, fromIntegral)
+
