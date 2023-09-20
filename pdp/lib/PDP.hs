@@ -842,11 +842,9 @@ instance (Ord x) => Prove2 EQ x x where
       | otherwise -> Left axiom
 
 instance
+  {-# OVERLAPPABLE #-}
   forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) b
-   . ( SingKind ka
-     , SingI na
-     , Prove2 p (Demote ka) b
-     )
+   . (SingKind ka, SingI na, Prove2 p (Demote ka) b)
   => Prove1 (p na) b
   where
   prove1E' = prove2E (namedDemote @na)
