@@ -8,6 +8,7 @@
     hs_kind = {
       url = "github:k0001/hs-kind";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
     };
   };
 

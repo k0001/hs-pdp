@@ -2,121 +2,122 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module PDP {--
-  ( Proof
-  , type (-->)
-  , TRUE
-  , FALSE
-  , AND
-  , AND1
-  , OR
-  , OR1
-  , NOT
-  , NOT1
-  , XOR
-  , XNOR
-  , axiom
-  , PDP.id
-  , PDP.const
-  , lift
-  , mp
-  , ($*)
-  , mt
-  , rmap
-  , lmap
-  , andSwap
-  , and1Swap
-  , orSwap
-  , or1Swap
-  , true
-  , or1
-  , unOR1
-  , and1
-  , unAND1
-  , dmAND
-  , dmAND1
-  , dmOR
-  , dmOR1
-  , PDP.curry
-  , PDP.uncurry
-  , unOR
-  , PDP.or
-  , left
-  , right
-  , mapLeft
-  , mapRight
-  , PDP.and
-  , mapFst
-  , mapSnd
-  , PDP.fst
-  , PDP.snd
-  , absurd
-  , not1
-  , unNOT1
+           ( Proof
+           , type (-->)
+           , TRUE
+           , FALSE
+           , AND
+           , AND1
+           , OR
+           , OR1
+           , NOT
+           , NOT1
+           , XOR
+           , XNOR
+           , axiom
+           , PDP.id
+           , PDP.const
+           , lift
+           , mp
+           , ($*)
+           , mt
+           , rmap
+           , lmap
+           , andSwap
+           , and1Swap
+           , orSwap
+           , or1Swap
+           , true
+           , or1
+           , unOR1
+           , and1
+           , unAND1
+           , dmAND
+           , dmAND1
+           , dmOR
+           , dmOR1
+           , PDP.curry
+           , PDP.uncurry
+           , unOR
+           , PDP.or
+           , left
+           , right
+           , mapLeft
+           , mapRight
+           , PDP.and
+           , mapFst
+           , mapSnd
+           , PDP.fst
+           , PDP.snd
+           , absurd
+           , not1
+           , unNOT1
 
-  , Prove1(..)
-  , prove1E
-  , prove1S
-  , prove1S1
-  , unsafeProve1S
-  , unsafeProve1S1
+           , Prove1(..)
+           , prove1E
+           , prove1S
+           , prove1S1
+           , unsafeProve1S
+           , unsafeProve1S1
 
-  , Prove(..)
+           , Prove(..)
 
-  , Description1(..)
+           , Description1(..)
 
-  , LT, lt
-  , LE, le
-  , EQ, eq
-  , GE, ge
-  , GT, gt
-  , NE, ne
-  , neSym
-  , notGE
-  , geLE
-  , geTrans
-  , notLE
-  , leGE
-  , leTrans
-  , notGT
-  , gtLT
-  , gtNotLE
-  , gtAsym
-  , gtTrans
-  , notEQ
-  , eqRefl
-  , eqSym
-  , eqTrans
-  , notLT
-  , ltGT
-  , ltAsym
-  , ltTrans
+           , LT, lt
+           , LE, le
+           , EQ, eq
+           , GE, ge
+           , GT, gt
+           , NE, ne
+           , neSym
+           , notGE
+           , geLE
+           , geTrans
+           , notLE
+           , leGE
+           , leTrans
+           , notGT
+           , gtLT
+           , gtNotLE
+           , gtAsym
+           , gtTrans
+           , notEQ
+           , eqRefl
+           , eqSym
+           , eqTrans
+           , notLT
+           , ltGT
+           , ltAsym
+           , ltTrans
 
-  , Named
-  , pattern Named
-  , type (@)
-  , unsafeNamed
-  , unNamed
-  , name
+           , Named
+           , pattern Named
+           , type (@)
+           , unsafeNamed
+           , unNamed
+           , name
 
-  , Refined
-  , pattern Refined
-  , type (?)
-  , unsafeRefined
-  , unRefined
-  , refine
-  , refinedProve1
-  , refinedProve1S
-  , refinedProve1S1
-  , refinedProve1M
-  , refinedProve1M1
-  , unsafeRefinedProve1S
-  , unsafeRefinedProve1S1
-  , rename
-  , forRefined
-  , traverseRefined
+           , Refined
+           , pattern Refined
+           , type (?)
+           , unsafeRefined
+           , unsafeMapRefined
+           , unRefined
+           , refine
+           , refinedProve1
+           , refinedProve1S
+           , refinedProve1S1
+           , refinedProve1M
+           , refinedProve1M1
+           , unsafeRefinedProve1S
+           , unsafeRefinedProve1S1
+           , rename
+           , forRefined
+           , traverseRefined
 
-  )  --}
-  where
+           )  --}
+where
 
 import Control.Monad
 import Data.Aeson qualified as Ae
@@ -197,6 +198,7 @@ lift !_ = axiom
 -- @
 ($*) :: Proof (a --> b) -> Proof a -> Proof b
 ($*) = mp
+
 infixl 4 $*
 
 -- | @
@@ -253,6 +255,7 @@ dmOR1 = axiom
 -- | Modus Tollens.
 mt :: Proof (a --> b) -> Proof (NOT b) -> Proof (NOT a)
 mt !_ !_ = axiom
+
 infixl 4 `mt`
 
 curry :: Proof ((AND a b --> c) --> a --> b --> c)
@@ -306,8 +309,15 @@ unNOT1 = axiom
 --------------------------------------------------------------------------------
 
 newtype Named (n :: k) (a :: Type) = MkNamed a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField, Csv.ToRecord,
-                    Csv.DefaultOrdered)
+  deriving newtype
+    ( Eq
+    , Ord
+    , Show
+    , Ae.ToJSON
+    , Csv.ToField
+    , Csv.ToRecord
+    , Csv.DefaultOrdered
+    )
 
 type role Named nominal representational
 type (@) = Named
@@ -324,18 +334,26 @@ pattern Named :: forall n a. a -> n @ a
 pattern Named a <- (unNamed -> a)
 {-# COMPLETE Named #-}
 
-name :: forall {kn} (a :: Type) (b :: Type)
-     .  a
-     -> (forall (n :: kn). n @ a -> b)
-     -> b
+name
+  :: forall {kn} (a :: Type) (b :: Type)
+   . a
+  -> (forall (n :: kn). n @ a -> b)
+  -> b
 name a f = f (MkNamed a)
 {-# NOINLINE name #-}
 
 --------------------------------------------------------------------------------
 
 newtype Refined (p :: kn -> kp) (a :: Type) = MkRefined a
-  deriving newtype (Eq, Ord, Show, Ae.ToJSON, Csv.ToField, Csv.ToRecord,
-                    Csv.DefaultOrdered)
+  deriving newtype
+    ( Eq
+    , Ord
+    , Show
+    , Ae.ToJSON
+    , Csv.ToField
+    , Csv.ToRecord
+    , Csv.DefaultOrdered
+    )
 
 type role Refined nominal representational
 type a ? p = Refined p a
@@ -352,31 +370,38 @@ pattern Refined :: forall p a. a -> a ? p
 pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
-refine :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) (a :: Type)
-       .  n @ a
-       -> Proof (p n)
-       -> a ? p
+unsafeMapRefined :: (a -> b) -> a ? p -> b ? p
+unsafeMapRefined f (Refined a) = unsafeRefined (f a)
+
+refine
+  :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) (a :: Type)
+   . n @ a
+  -> Proof (p n)
+  -> a ? p
 refine (Named a) _ = MkRefined a
 {-# INLINE refine #-}
 
-refined :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
-        .  a
-        -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
-        -> Maybe (a ? p)
+refined
+  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+   . a
+  -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+  -> Maybe (a ? p)
 refined a f = name a $ \na -> refine na <$> f na
 {-# INLINE refined #-}
 
-refinedProve1 :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
-              .  Prove1 p a
-              => a
-              -> Maybe (a ? p)
+refinedProve1
+  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+   . (Prove1 p a)
+  => a
+  -> Maybe (a ? p)
 refinedProve1 a = name a $ \na -> refine na <$> hush (prove1 na)
 {-# INLINE refinedProve1 #-}
 
-rename :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type)
-       .  a ? p
-       -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
-       -> b
+rename
+  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type)
+   . a ? p
+  -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
+  -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# NOINLINE rename #-}
 
@@ -400,28 +425,33 @@ forRefined t g = traverseRefined g t
 
 -- | @x < y@, according to 'Ord'.
 data LT y x
+
 type LT :: y -> x -> Type
 
 -- | @x == y@, according to 'Ord'.
 data EQ y x
+
 type EQ :: y -> x -> Type
 
 -- | @x > y@, according to 'Ord'.
 data GT y x
+
 type GT :: y -> x -> Type
 
 -- | @x /= y@, according to 'Ord'.
 type NE y = OR1 (LT y) (GT y)
+
 type NE :: y -> x -> Type
 
 -- | @x <= y@, according to 'Ord'.
 type LE y = OR1 (LT y) (EQ y)
+
 type LE :: y -> x -> Type
 
 -- | @x >= y@, according to 'Ord'.
 type GE y = OR1 (GT y) (EQ y)
-type GE :: y -> x -> Type
 
+type GE :: y -> x -> Type
 
 ltTrans :: Proof (LT a b --> LT b c --> LT a c)
 ltTrans = axiom
@@ -495,129 +525,167 @@ notGE = axiom
 neSym :: Proof (NE a b --> NE b a)
 neSym = axiom
 
-lt :: Ord x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (LT l r))) (Proof (LT l r))
+lt
+  :: (Ord x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (LT l r))) (Proof (LT l r))
 lt fa fb = \(Named la) (Named rb) ->
   if fb rb < fa la then Right axiom else Left axiom
 
-eq :: Eq x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (EQ l r))) (Proof (EQ l r))
+eq
+  :: (Eq x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (EQ l r))) (Proof (EQ l r))
 eq fa fb = \(Named la) (Named rb) ->
   if fb rb == fa la then Right axiom else Left axiom
 
-gt :: Ord x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (GT l r))) (Proof (GT l r))
+gt
+  :: (Ord x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (GT l r))) (Proof (GT l r))
 gt fa fb = \(Named la) (Named rb) ->
   if fb rb > fa la then Right axiom else Left axiom
 
-le :: Ord x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (LE l r))) (Proof (LE l r))
-le fa fb = \l r -> either (Right . mp notGT)
-                          (Left . mp gtNotLE)
-                          (gt fa fb l r)
+le
+  :: (Ord x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (LE l r))) (Proof (LE l r))
+le fa fb = \l r ->
+  either
+    (Right . mp notGT)
+    (Left . mp gtNotLE)
+    (gt fa fb l r)
 
-ne :: Eq x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (NE l r))) (Proof (NE l r))
-ne fa fb = \l r -> either (Right . mp notEQ)
-                          (Left . mp eqNotNE)
-                          (eq fa fb l r)
+ne
+  :: (Eq x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (NE l r))) (Proof (NE l r))
+ne fa fb = \l r ->
+  either
+    (Right . mp notEQ)
+    (Left . mp eqNotNE)
+    (eq fa fb l r)
 
-ge :: Ord x
-   => (a -> x)
-   -> (b -> x)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (GE l r))) (Proof (GE l r))
-ge fa fb = \l r -> either (Right . mp notLT)
-                          (Left . mp ltNotGE)
-                          (lt fa fb l r)
+ge
+  :: (Ord x)
+  => (a -> x)
+  -> (b -> x)
+  -> l @ a
+  -> r @ b
+  -> Either (Proof (NOT (GE l r))) (Proof (GE l r))
+ge fa fb = \l r ->
+  either
+    (Right . mp notLT)
+    (Left . mp ltNotGE)
+    (lt fa fb l r)
 
 --------------------------------------------------------------------------------
 
 class Prove (p :: k) where
   prove' :: Either (Proof (NOT p)) (Proof p)
 
-prove :: forall {k} (p :: k). Prove p => Either (Proof (NOT p)) (Proof p)
+prove :: forall {k} (p :: k). (Prove p) => Either (Proof (NOT p)) (Proof p)
 prove = prove' @k @p
 
-instance Prove p => Prove (NOT p) where
+instance (Prove p) => Prove (NOT p) where
   prove' = case prove @p of
-             Right _ -> Left  axiom
-             Left  _ -> Right axiom
+    Right _ -> Left axiom
+    Left _ -> Right axiom
 
-instance forall p q na. Prove (AND (p na) (q na)) => Prove (AND1 p q na) where
+instance forall p q na. (Prove (AND (p na) (q na))) => Prove (AND1 p q na) where
   prove' = case prove @(AND (p na) (q na)) of
-              Right _ -> Right axiom
-              Left  _ -> Left  axiom
+    Right _ -> Right axiom
+    Left _ -> Left axiom
 
 instance forall p q. (Prove p, Prove q) => Prove (AND p q) where
   prove' = case (prove @p, prove @q) of
-              (Right _, Right _) -> Right axiom
-              _ -> Left axiom
+    (Right _, Right _) -> Right axiom
+    _ -> Left axiom
 
-instance forall p q na. Prove (OR (p na) (q na)) => Prove (OR1 p q na) where
+instance forall p q na. (Prove (OR (p na) (q na))) => Prove (OR1 p q na) where
   prove' = case prove @(OR (p na) (q na)) of
-              Right _ -> Right axiom
-              Left  _ -> Left  axiom
+    Right _ -> Right axiom
+    Left _ -> Left axiom
 
 instance forall p q. (Prove p, Prove q) => Prove (OR p q) where
   prove' = case (prove @p, prove @q) of
-              (Right _, _) -> Right axiom
-              (_, Right _) -> Right axiom
-              _            -> Left  axiom
+    (Right _, _) -> Right axiom
+    (_, Right _) -> Right axiom
+    _ -> Left axiom
 
 -------------------------------------------------------------------------------
 
-description1 :: forall {kn} {kp} (p :: kn -> kp). Description1 p => ShowS
+description1 :: forall {kn} {kp} (p :: kn -> kp). (Description1 p) => ShowS
 description1 = description1' @kn @kp @p
 {-# INLINE description1 #-}
 
 class Description1 (p :: kn -> kp) where
   description1' :: ShowS
 
-instance forall p. Description1 p => Description1 (NOT1 p) where
+instance forall p. (Description1 p) => Description1 (NOT1 p) where
   description1' = showString "not (" . description1 @p . showChar ')'
 
-instance forall l r. (Description1 l, Description1 r)
-  => Description1 (AND1 l r) where
-  description1' = showChar '(' . description1 @l . showString ") and ("
-                . description1 @r . showChar ')'
+instance
+  forall l r
+   . (Description1 l, Description1 r)
+  => Description1 (AND1 l r)
+  where
+  description1' =
+    showChar '('
+      . description1 @l
+      . showString ") and ("
+      . description1 @r
+      . showChar ')'
 
-instance forall l r. (Description1 l, Description1 r)
-  => Description1 (OR1 l r) where
-  description1' = showChar '(' . description1 @l . showString ") or ("
-                . description1 @r . showChar ')'
+instance
+  forall l r
+   . (Description1 l, Description1 r)
+  => Description1 (OR1 l r)
+  where
+  description1' =
+    showChar '('
+      . description1 @l
+      . showString ") or ("
+      . description1 @r
+      . showChar ')'
 
-instance {-# OVERLAPPABLE #-} forall k n.
-  (SingKind k, SingI n, Show (Demote k)) => Description1 (GT (n :: k)) where
+instance
+  {-# OVERLAPPABLE #-}
+  forall k n
+   . (SingKind k, SingI n, Show (Demote k))
+  => Description1 (GT (n :: k))
+  where
   description1' = showString "more than " . showsPrec appPrec1 (demote @n)
 
-instance {-# OVERLAPPABLE #-} forall k n.
-  (SingKind k, SingI n, Show (Demote k)) => Description1 (LT (n :: k)) where
+instance
+  {-# OVERLAPPABLE #-}
+  forall k n
+   . (SingKind k, SingI n, Show (Demote k))
+  => Description1 (LT (n :: k))
+  where
   description1' = showString "less than " . showsPrec appPrec1 (demote @n)
 
-instance {-# OVERLAPPABLE #-} forall k n.
-  (SingKind k, SingI n, Show (Demote k)) => Description1 (EQ (n :: k)) where
+instance
+  {-# OVERLAPPABLE #-}
+  forall k n
+   . (SingKind k, SingI n, Show (Demote k))
+  => Description1 (EQ (n :: k))
+  where
   description1' = showString "equal to " . showsPrec appPrec1 (demote @n)
 
 --------------------------------------------------------------------------------
@@ -627,7 +695,7 @@ class Prove1 (p :: kn -> kpn) (a :: Type) where
 
 prove1
   :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)
-  .  Prove1 p a
+   . (Prove1 p a)
   => n @ a
   -> Either (Proof (NOT (p n))) (Proof (p n))
 prove1 = prove1'
@@ -635,63 +703,65 @@ prove1 = prove1'
 
 prove1M
   :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) (m :: Type -> Type)
-  .  (Prove1 p a, Description1 p, MonadFail m)
+   . (Prove1 p a, Description1 p, MonadFail m)
   => n @ a
   -> m (Proof (p n))
 prove1M = either (\_ -> fail (description1 @p "")) pure . prove1
 
 prove1S
   :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)
-  .  (Prove1 p a, Description1 p)
+   . (Prove1 p a, Description1 p)
   => n @ a
   -> Either String (Proof (p n))
 prove1S = first (\_ -> description1 @p "") . prove1
 
-instance Prove1 p a => Prove1 (NOT1 p) a where
+instance (Prove1 p a) => Prove1 (NOT1 p) a where
   prove1' na = case prove1 @p @a na of
-                Left _ -> Right axiom
-                _      -> Left  axiom
+    Left _ -> Right axiom
+    _ -> Left axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (AND1 f g) a where
   prove1' na = case (prove1 @f @a na, prove1 @g @a na) of
     (Right _, Right _) -> Right axiom
-    _                  -> Left axiom
+    _ -> Left axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (OR1 f g) a where
   prove1' na = case (prove1 @f @a na, prove1 @g @a na) of
     (Right _, _) -> Right axiom
     (_, Right _) -> Right axiom
-    _            -> Left  axiom
+    _ -> Left axiom
 
 instance (Prove1 p a) => Prove1 p (Tagged x a) where
   prove1' = prove1' . unsafeMapNamed unTagged
 
 --------------------------------------------------------------------------------
 
-instance Ord x => Prove2 LT x x where
+instance (Ord x) => Prove2 LT x x where
   prove2' nz na
     | unNamed na < unNamed nz = Right axiom
     | otherwise = Left axiom
 
-instance Ord x => Prove2 GT x x where
+instance (Ord x) => Prove2 GT x x where
   prove2' na nz
     | unNamed nz > unNamed na = Right axiom
     | otherwise = Left axiom
 
-instance Ord x => Prove2 EQ x x where
+instance (Ord x) => Prove2 EQ x x where
   prove2' na nb
     | unNamed nb == unNamed na = Right axiom
     | otherwise = Left axiom
 
-
 unsafeMapNamed :: (a -> b) -> n @ a -> n @ b
 unsafeMapNamed f (Named a) = unsafeNamed (f a)
 
-instance forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) (b :: Type).
-  ( SingKind ka
-  , SingI na
-  , Prove2 p (Demote ka) b
-  ) => Prove1 (p na) b where
+instance
+  forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) (b :: Type)
+   . ( SingKind ka
+     , SingI na
+     , Prove2 p (Demote ka) b
+     )
+  => Prove1 (p na) b
+  where
   prove1' = prove2 (namedDemote @na)
   {-# INLINE prove1' #-}
 
@@ -702,18 +772,27 @@ class Prove2 (p :: kna -> knb -> kpnanb) (a :: Type) (b :: Type) where
   prove2' :: na @ a -> nb @ b -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 
 prove2
-  :: forall {kna} {knb} {kpnanb} (p :: kna -> knb -> kpnanb)
-     (a :: Type) (b :: Type) (na :: kna) (nb :: knb)
-  .  Prove2 p a b
+  :: forall
+    {kna}
+    {knb}
+    {kpnanb}
+    (p :: kna -> knb -> kpnanb)
+    (a :: Type)
+    (b :: Type)
+    (na :: kna)
+    (nb :: knb)
+   . (Prove2 p a b)
   => na @ a
   -> nb @ b
   -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 prove2 = prove2'
 {-# INLINE prove2 #-}
 
-instance Prove2 p a b => Prove2 p (Tagged x a) (Tagged y b) where
-  prove2' nta ntb = prove2' (unsafeMapNamed unTagged nta)
-                            (unsafeMapNamed unTagged ntb)
+instance (Prove2 p a b) => Prove2 p (Tagged x a) (Tagged y b) where
+  prove2' nta ntb =
+    prove2'
+      (unsafeMapNamed unTagged nta)
+      (unsafeMapNamed unTagged ntb)
 
 --------------------------------------------------------------------------------
 
@@ -727,9 +806,9 @@ instance Prove2 p a b => Prove2 p (Tagged x a) (Tagged y b) where
     {-# INLINE prove2' #-}; \
   };
 
-INST_VIA_RATIONAL(Integer)
-INST_VIA_RATIONAL(Float)
-INST_VIA_RATIONAL(Double)
+INST_VIA_RATIONAL (Integer)
+INST_VIA_RATIONAL (Float)
+INST_VIA_RATIONAL (Double)
 
 #define INST_VIA_INTEGER(D) \
   INST_VIA_RATIONAL(D); \
@@ -743,12 +822,12 @@ INST_VIA_RATIONAL(Double)
     {-# INLINE prove2' #-}; \
   };
 
-INST_VIA_INTEGER(Natural)
-INST_VIA_INTEGER(Int)
-INST_VIA_INTEGER(Int8)
-INST_VIA_INTEGER(Int16)
-INST_VIA_INTEGER(Int32)
-INST_VIA_INTEGER(Int64)
+INST_VIA_INTEGER (Natural)
+INST_VIA_INTEGER (Int)
+INST_VIA_INTEGER (Int8)
+INST_VIA_INTEGER (Int16)
+INST_VIA_INTEGER (Int32)
+INST_VIA_INTEGER (Int64)
 
 #define INST_VIA_NATURAL(D) \
   INST_VIA_INTEGER(D); \
@@ -761,41 +840,57 @@ INST_VIA_INTEGER(Int64)
     {-# INLINE prove2' #-}; \
   };
 
-INST_VIA_NATURAL(Word)
-INST_VIA_NATURAL(Word8)
-INST_VIA_NATURAL(Word16)
-INST_VIA_NATURAL(Word32)
-INST_VIA_NATURAL(Word64)
+INST_VIA_NATURAL (Word)
+INST_VIA_NATURAL (Word8)
+INST_VIA_NATURAL (Word16)
+INST_VIA_NATURAL (Word32)
+INST_VIA_NATURAL (Word64)
 
 --------------------------------------------------------------------------------
 
-instance forall p a. (Csv.FromField a, Prove1 p a, Description1 p)
-  => Csv.FromField (a ? p) where
-  parseField = Csv.parseField >=> \a ->
-               name a $ \na ->
-               either fail (pure . refine na) (prove1S na)
+instance
+  forall p a
+   . (Csv.FromField a, Prove1 p a, Description1 p)
+  => Csv.FromField (a ? p)
+  where
+  parseField =
+    Csv.parseField >=> \a ->
+      name a $ \na ->
+        either fail (pure . refine na) (prove1S na)
 
-instance forall p a. (Csv.FromRecord a, Prove1 p a, Description1 p)
-  => Csv.FromRecord (a ? p) where
-  parseRecord = Csv.parseRecord >=> \a ->
-               name a $ \na ->
-               either fail (pure . refine na) (prove1S na)
+instance
+  forall p a
+   . (Csv.FromRecord a, Prove1 p a, Description1 p)
+  => Csv.FromRecord (a ? p)
+  where
+  parseRecord =
+    Csv.parseRecord >=> \a ->
+      name a $ \na ->
+        either fail (pure . refine na) (prove1S na)
 
 --------------------------------------------------------------------------------
 
-instance forall p a. (Ae.FromJSON a, Prove1 p a, Description1 p)
-  => Ae.FromJSON (a ? p) where
-  parseJSON = Ae.parseJSON >=> \a ->
-              name a $ \na ->
-              either fail (pure . refine na) (prove1S na)
+instance
+  forall p a
+   . (Ae.FromJSON a, Prove1 p a, Description1 p)
+  => Ae.FromJSON (a ? p)
+  where
+  parseJSON =
+    Ae.parseJSON >=> \a ->
+      name a $ \na ->
+        either fail (pure . refine na) (prove1S na)
 
 --------------------------------------------------------------------------------
 
-instance forall p a. (Bin.Binary a, Prove1 p a, Description1 p)
-  => Bin.Binary (a ? p) where
+instance
+  forall p a
+   . (Bin.Binary a, Prove1 p a, Description1 p)
+  => Bin.Binary (a ? p)
+  where
   put = Bin.put . unRefined
-  get = Bin.get >>= \a ->
-        name a $ \na ->
+  get =
+    Bin.get >>= \a ->
+      name a $ \na ->
         either fail (pure . refine na) (prove1S na)
 
 --------------------------------------------------------------------------------
