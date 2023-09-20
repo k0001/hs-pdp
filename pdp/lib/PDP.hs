@@ -52,9 +52,16 @@ module PDP {--}
   , absurd
   , not1
   , unNOT1
+  , Prove2 (..)
+  , prove2E
+  , prove2S
+  , prove2F
+  , prove2T
   , Prove1 (..)
   , prove1E
   , prove1S
+  , prove1F
+  , prove1T
   , Prove (..)
   , Description1 (..)
   , LT
@@ -334,7 +341,7 @@ pattern Named a <- (unNamed -> a)
 {-# COMPLETE Named #-}
 
 name
-  :: forall {kn} (a :: Type) (b :: Type)
+  :: forall {kn} a b
    . a
   -> (forall (n :: kn). n @ a -> b)
   -> b
@@ -342,7 +349,7 @@ name a f = f (MkNamed a)
 {-# INLINE name #-}
 
 unsafeMapNamed
-  :: forall {kn} (a :: Type) (b :: Type) (n :: kn)
+  :: forall {kn} a b (n :: kn)
    . (a -> b)
   -> n @ a
   -> n @ b
@@ -384,7 +391,7 @@ pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
 unsafeMapRefined
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type)
+  :: forall {kn} {kp} (p :: kn -> kp) a b
    . (a -> b)
   -> a ? p
   -> b ? p
@@ -392,7 +399,7 @@ unsafeMapRefined f = \(Refined a) -> unsafeRefined (f a)
 {-# INLINE unsafeMapRefined #-}
 
 refined
-  :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) (a :: Type)
+  :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) a
    . n @ a
   -> Proof (p n)
   -> a ? p
@@ -400,7 +407,7 @@ refined (Named a) = \_ -> MkRefined a
 {-# INLINE refined #-}
 
 refineS
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
+  :: forall {kn} {kp} (p :: kn -> kp) a
    . (Description1 p)
   => a
   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
@@ -410,7 +417,7 @@ refineS a f = name a $ \na ->
 {-# INLINE refineS #-}
 
 refineF
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a m
    . (Description1 p, MonadFail m)
   => a
   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
@@ -419,7 +426,7 @@ refineF a f = either fail pure (refineS a f)
 {-# INLINE refineF #-}
 
 refineT
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a m
    . (Description1 p, MonadThrow m)
   => a
   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
@@ -428,7 +435,7 @@ refineT a f = either (throwM . Disproved) pure (refineS a f)
 {-# INLINE refineT #-}
 
 refine1S
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a m
    . (Prove1 p a, Description1 p, MonadThrow m)
   => a
   -> Either String (a ? p)
@@ -436,7 +443,7 @@ refine1S = \a -> name a $ \na -> refined na <$> prove1S na
 {-# INLINE refine1S #-}
 
 refine1T
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a m
    . (Prove1 p a, Description1 p, MonadThrow m)
   => a
   -> m (a ? p)
@@ -444,7 +451,7 @@ refine1T = \a -> name a $ \na -> refined na <$> prove1T na
 {-# INLINE refine1T #-}
 
 refine1F
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a m
    . (Prove1 p a, Description1 p, MonadFail m)
   => a
   -> m (a ? p)
@@ -452,7 +459,7 @@ refine1F = \a -> name a $ \na -> refined na <$> prove1F na
 {-# INLINE refine1F #-}
 
 mapRefined
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type) m
+  :: forall {kn} {kp} (p :: kn -> kp) a b m
    . (forall (n :: kn). n @ a -> Proof (p n) -> m (b ? p))
   -> a ? p
   -> m (b ? p)
@@ -460,7 +467,7 @@ mapRefined x = \f -> rename f x
 {-# INLINE mapRefined #-}
 
 rename
-  :: forall {kn} {kp} (p :: kn -> kp) (a :: Type) (b :: Type)
+  :: forall {kn} {kp} (p :: kn -> kp) a b
    . a ? p
   -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
   -> b
@@ -752,11 +759,11 @@ instance
 
 --------------------------------------------------------------------------------
 
-class Prove1 (p :: kn -> kpn) (a :: Type) where
+class Prove1 (p :: kn -> kpn) a where
   prove1E' :: n @ a -> Either (Proof (NOT (p n))) (Proof (p n))
 
 prove1E
-  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)
+  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
    . (Prove1 p a)
   => n @ a
   -> Either (Proof (NOT (p n))) (Proof (p n))
@@ -764,7 +771,7 @@ prove1E = prove1E'
 {-# INLINE prove1E #-}
 
 prove1T
-  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) m
+  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
    . (Prove1 p a, Description1 p, MonadThrow m)
   => n @ a
   -> m (Proof (p n))
@@ -772,7 +779,7 @@ prove1T = either (throwM . Disproved) pure . prove1S
 {-# INLINE prove1T #-}
 
 prove1F
-  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) m
+  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
    . (Prove1 p a, Description1 p, MonadFail m)
   => n @ a
   -> m (Proof (p n))
@@ -780,7 +787,7 @@ prove1F = either fail pure . prove1S
 {-# INLINE prove1F #-}
 
 prove1S
-  :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)
+  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
    . (Prove1 p a, Description1 p)
   => n @ a
   -> Either String (Proof (p n))
@@ -834,7 +841,7 @@ instance (Ord x) => Prove2 EQ x x where
       | otherwise -> Left axiom
 
 instance
-  forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) (b :: Type)
+  forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) b
    . ( SingKind ka
      , SingI na
      , Prove2 p (Demote ka) b
@@ -848,7 +855,7 @@ namedDemote :: forall {k} (n :: k). (SingKind k, SingI n) => n @ Demote k
 namedDemote = unsafeNamed (demote @n)
 {-# INLINE namedDemote #-}
 
-class Prove2 (p :: kna -> knb -> kpnanb) (a :: Type) (b :: Type) where
+class Prove2 (p :: kna -> knb -> kpnanb) a b where
   prove2E'
     :: na @ a
     -> nb @ b
@@ -860,8 +867,8 @@ prove2E
     {knb}
     {kpnanb}
     (p :: kna -> knb -> kpnanb)
-    (a :: Type)
-    (b :: Type)
+    a
+    b
     (na :: kna)
     (nb :: knb)
    . (Prove2 p a b)
@@ -870,6 +877,59 @@ prove2E
   -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 prove2E = prove2E'
 {-# INLINE prove2E #-}
+
+prove2S
+  :: forall
+    {kna}
+    {knb}
+    {kpnanb}
+    (p :: kna -> knb -> kpnanb)
+    a
+    b
+    (na :: kna)
+    (nb :: knb)
+   . (Prove2 p a b, Description1 p)
+  => na @ a
+  -> nb @ b
+  -> Either String (Proof (p na nb))
+prove2S = \a b -> first (\_ -> description1 @p "") (prove2S a b)
+{-# INLINE prove2S #-}
+
+prove2F
+  :: forall
+    {kna}
+    {knb}
+    {kpnanb}
+    (p :: kna -> knb -> kpnanb)
+    a
+    b
+    (na :: kna)
+    (nb :: knb)
+    m
+   . (Prove2 p a b, Description1 p, MonadFail m)
+  => na @ a
+  -> nb @ b
+  -> m (Proof (p na nb))
+prove2F = \a b -> either fail pure (prove2S a b)
+{-# INLINE prove2F #-}
+
+prove2T
+  :: forall
+    {kna}
+    {knb}
+    {kpnanb}
+    (p :: kna -> knb -> kpnanb)
+    a
+    b
+    (na :: kna)
+    (nb :: knb)
+    m
+   . (Prove2 p a b, Description1 p, MonadThrow m)
+  => na @ a
+  -> nb @ b
+  -> m (Proof (p na nb))
+prove2T = \a b -> either (throwM . Disproved) pure (prove2S a b)
+{-# INLINE prove2T #-}
 
 instance (Prove2 p a b) => Prove2 p (Tagged x a) (Tagged y b) where
   {-# INLINE prove2E' #-}
