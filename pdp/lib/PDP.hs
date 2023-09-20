@@ -135,6 +135,7 @@ import Data.Csv qualified as Csv
 import Data.Int
 import Data.Kind (Type)
 import Data.Singletons
+import Data.Scientific (Scientific)
 import Data.Tagged
 import Data.Word
 import GHC.Show (appPrec1)
@@ -987,6 +988,7 @@ instance (Bin.Binary a, Prove1 p a, Description1 p) => Bin.Binary (a ? p) where
 INST_VIA(Int, Int64, fromIntegral)
 INST_VIA(Int, Integer, fromIntegral)
 INST_VIA(Int, Rational, fromIntegral)
+INST_VIA(Int, Scientific, fromIntegral)
 
 INST_VIA(Int8, Int16, fromIntegral)
 INST_VIA(Int8, Int32, fromIntegral)
@@ -995,6 +997,7 @@ INST_VIA(Int8, Integer, fromIntegral)
 INST_VIA(Int8, Float, fromIntegral)
 INST_VIA(Int8, Double, fromIntegral)
 INST_VIA(Int8, Rational, fromIntegral)
+INST_VIA(Int8, Scientific, fromIntegral)
 
 INST_VIA(Int16, Int32, fromIntegral)
 INST_VIA(Int16, Int64, fromIntegral)
@@ -1002,19 +1005,23 @@ INST_VIA(Int16, Integer, fromIntegral)
 INST_VIA(Int16, Float, fromIntegral)
 INST_VIA(Int16, Double, fromIntegral)
 INST_VIA(Int16, Rational, fromIntegral)
+INST_VIA(Int16, Scientific, fromIntegral)
 
 INST_VIA(Int32, Int64, fromIntegral)
 INST_VIA(Int32, Integer, fromIntegral)
 INST_VIA(Int32, Double, fromIntegral)
 INST_VIA(Int32, Rational, fromIntegral)
+INST_VIA(Int32, Scientific, fromIntegral)
 
 INST_VIA(Int64, Integer, fromIntegral)
 INST_VIA(Int64, Rational, fromIntegral)
+INST_VIA(Int64, Scientific, fromIntegral)
 
 INST_VIA(Word, Integer, fromIntegral)
 INST_VIA(Word, Natural, fromIntegral)
 INST_VIA(Word, Word64, fromIntegral)
 INST_VIA(Word, Rational, fromIntegral)
+INST_VIA(Word, Scientific, fromIntegral)
 
 INST_VIA(Word8, Integer, fromIntegral)
 INST_VIA(Word8, Natural, fromIntegral)
@@ -1024,6 +1031,7 @@ INST_VIA(Word8, Word64, fromIntegral)
 INST_VIA(Word8, Float, fromIntegral)
 INST_VIA(Word8, Double, fromIntegral)
 INST_VIA(Word8, Rational, fromIntegral)
+INST_VIA(Word8, Scientific, fromIntegral)
 
 INST_VIA(Word16, Integer, fromIntegral)
 INST_VIA(Word16, Natural, fromIntegral)
@@ -1032,21 +1040,21 @@ INST_VIA(Word16, Word64, fromIntegral)
 INST_VIA(Word16, Float, fromIntegral)
 INST_VIA(Word16, Double, fromIntegral)
 INST_VIA(Word16, Rational, fromIntegral)
+INST_VIA(Word16, Scientific, fromIntegral)
 
 INST_VIA(Word32, Integer, fromIntegral)
 INST_VIA(Word32, Natural, fromIntegral)
 INST_VIA(Word32, Word64, fromIntegral)
 INST_VIA(Word32, Double, fromIntegral)
 INST_VIA(Word32, Rational, fromIntegral)
+INST_VIA(Word32, Scientific, fromIntegral)
 
 INST_VIA(Word64, Integer, fromIntegral)
 INST_VIA(Word64, Natural, fromIntegral)
 INST_VIA(Word64, Rational, fromIntegral)
+INST_VIA(Word64, Scientific, fromIntegral)
 
 INST_VIA(Float, Double, realToFrac)
-INST_VIA(Float, Rational, realToFrac)
-
-INST_VIA(Double, Rational, realToFrac)
 
 #if WORD_SIZE_IN_BITS == 64
 INST_VIA(Word64, Word, fromIntegral)
@@ -1060,6 +1068,8 @@ INST_VIA(Word, Double, fromIntegral)
 
 INST_VIA(Natural, Integer, fromIntegral)
 INST_VIA(Natural, Rational, fromIntegral)
+INST_VIA(Natural, Scientific, fromIntegral)
 
 INST_VIA(Integer, Rational, fromIntegral)
+INST_VIA(Integer, Scientific, fromIntegral)
 
