@@ -102,6 +102,7 @@ module PDP {--}
   , pattern Named
   , type (@)
   , unsafeNamed
+  , unsafeMapNamed
   , unNamed
   , name
   , Refined
