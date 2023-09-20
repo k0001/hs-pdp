@@ -120,6 +120,7 @@ module PDP {--
 where
 
 import Control.Monad
+import Control.Monad.Catch (Exception, MonadThrow, throwM)
 import Data.Aeson qualified as Ae
 import Data.Bifunctor
 import Data.Binary qualified as Bin
@@ -388,6 +389,10 @@ refined
   -> Maybe (a ? p)
 refined a f = name a $ \na -> refine na <$> f na
 {-# INLINE refined #-}
+
+data Disproved = Disproved String
+  deriving stock (Eq, Show)
+  deriving anyclass (Exception)
 
 refinedProve1
   :: forall {kn} {kp} (p :: kn -> kp) (a :: Type)
@@ -703,10 +708,10 @@ prove1 = prove1'
 
 prove1M
   :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn) (m :: Type -> Type)
-   . (Prove1 p a, Description1 p, MonadFail m)
+   . (Prove1 p a, Description1 p, MonadThrow m)
   => n @ a
   -> m (Proof (p n))
-prove1M = either (\_ -> fail (description1 @p "")) pure . prove1
+prove1M = either (throwM . Disproved) pure . prove1S
 
 prove1S
   :: forall {kn} {kpn} (p :: kn -> kpn) (a :: Type) (n :: kn)

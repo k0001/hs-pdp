@@ -28,6 +28,8 @@ common basic
     AllowAmbiguousTypes
     DataKinds
     DerivingStrategies
+    DeriveAnyClass
+    LambdaCase
     PatternSynonyms
     RoleAnnotations
     TypeOperators
@@ -41,6 +43,7 @@ library
     aeson,
     binary,
     cassava,
+    exceptions,
     kind-integer,
     kind-rational,
     scientific,
