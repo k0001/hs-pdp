@@ -49,6 +49,7 @@ library
     scientific,
     singletons,
     tagged,
+    time,
 
 test-suite test
   import: basic

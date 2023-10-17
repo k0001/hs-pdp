@@ -2,127 +2,127 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module PDP {--}
-  ( Proof
-  , type (-->)
-  , TRUE
-  , FALSE
-  , AND
-  , AND1
-  , OR
-  , OR1
-  , NOT
-  , NOT1
-  , XOR
-  , XNOR
-  , axiom
-  , PDP.id
-  , PDP.const
-  , lift
-  , mp
-  , ($*)
-  , mt
-  , rmap
-  , lmap
-  , andSwap
-  , and1Swap
-  , orSwap
-  , or1Swap
-  , true
-  , or1
-  , unOR1
-  , and1
-  , unAND1
-  , dmAND
-  , dmAND1
-  , dmOR
-  , dmOR1
-  , PDP.curry
-  , PDP.uncurry
-  , unOR
-  , PDP.or
-  , left
-  , right
-  , mapLeft
-  , mapRight
-  , PDP.and
-  , mapFst
-  , mapSnd
-  , PDP.fst
-  , PDP.snd
-  , absurd
-  , not1
-  , unNOT1
-  , Prove2 (..)
-  , prove2E
-  , prove2S
-  , prove2F
-  , prove2T
-  , Prove1 (..)
-  , prove1E
-  , prove1S
-  , prove1F
-  , prove1T
-  , Prove (..)
-  , Description1 (..)
-  , LT
-  , lt
-  , LE
-  , le
-  , EQ
-  , eq
-  , GE
-  , ge
-  , GT
-  , gt
-  , NE
-  , ne
-  , neSym
-  , notGE
-  , geLE
-  , geTrans
-  , notLE
-  , leGE
-  , leTrans
-  , notGT
-  , gtLT
-  , gtNotLE
-  , gtAsym
-  , gtTrans
-  , notEQ
-  , eqRefl
-  , eqSym
-  , eqTrans
-  , notLT
-  , ltGT
-  , ltAsym
-  , ltTrans
-  , ltNE
-  , gtNE
-  , Named
-  , pattern Named
-  , type (@)
-  , unsafeNamed
-  , unsafeMapNamed
-  , unNamed
-  , name
-  , Refined
-  , pattern Refined
-  , type (?)
-  , unRefined
-  , unsafeRefined
-  , mapRefined
-  , unsafeMapRefined
-  , refined
-  , refineT
-  , refineS
-  , refineF
-  , refine1T
-  , refine1S
-  , refine1F
-  , rename
-  , forRefined
-  , traverseRefined
-  ) -- }
+   ( Proof
+   , type (-->)
+   , TRUE
+   , FALSE
+   , AND
+   , AND1
+   , OR
+   , OR1
+   , NOT
+   , NOT1
+   , XOR
+   , XNOR
+   , axiom
+   , PDP.id
+   , PDP.const
+   , lift
+   , mp
+   , ($*)
+   , mt
+   , rmap
+   , lmap
+   , andSwap
+   , and1Swap
+   , orSwap
+   , or1Swap
+   , true
+   , or1
+   , unOR1
+   , and1
+   , unAND1
+   , dmAND
+   , dmAND1
+   , dmOR
+   , dmOR1
+   , PDP.curry
+   , PDP.uncurry
+   , unOR
+   , PDP.or
+   , left
+   , right
+   , mapLeft
+   , mapRight
+   , PDP.and
+   , mapFst
+   , mapSnd
+   , PDP.fst
+   , PDP.snd
+   , absurd
+   , not1
+   , unNOT1
+   , Prove2 (..)
+   , prove2E
+   , prove2S
+   , prove2F
+   , prove2T
+   , Prove1 (..)
+   , prove1E
+   , prove1S
+   , prove1F
+   , prove1T
+   , Prove (..)
+   , Description1 (..)
+   , LT
+   , lt
+   , LE
+   , le
+   , EQ
+   , eq
+   , GE
+   , ge
+   , GT
+   , gt
+   , NE
+   , ne
+   , neSym
+   , notGE
+   , geLE
+   , geTrans
+   , notLE
+   , leGE
+   , leTrans
+   , notGT
+   , gtLT
+   , gtNotLE
+   , gtAsym
+   , gtTrans
+   , notEQ
+   , eqRefl
+   , eqSym
+   , eqTrans
+   , notLT
+   , ltGT
+   , ltAsym
+   , ltTrans
+   , ltNE
+   , gtNE
+   , Named
+   , pattern Named
+   , type (@)
+   , unsafeNamed
+   , unsafeMapNamed
+   , unNamed
+   , name
+   , Refined
+   , pattern Refined
+   , type (?)
+   , unRefined
+   , unsafeRefined
+   , mapRefined
+   , unsafeMapRefined
+   , refined
+   , refineT
+   , refineS
+   , refineF
+   , refine1T
+   , refine1S
+   , refine1F
+   , rename
+   , forRefined
+   , traverseRefined
+   ) -- }
 where
 
 import Control.Monad
@@ -132,11 +132,13 @@ import Data.Bifunctor
 import Data.Binary qualified as Bin
 import Data.Coerce
 import Data.Csv qualified as Csv
+import Data.Fixed
 import Data.Int
 import Data.Kind (Type)
-import Data.Singletons
 import Data.Scientific (Scientific)
+import Data.Singletons
 import Data.Tagged
+import Data.Time.Clock qualified as Time
 import Data.Word
 import GHC.Show (appPrec1)
 import Numeric.Natural
@@ -144,7 +146,7 @@ import Numeric.Natural
 --------------------------------------------------------------------------------
 
 data Proof (p :: k) = QED
-  deriving (Show)
+   deriving (Show)
 
 type a --> b = NOT a `OR` b
 type (-->) :: a -> b -> Type
@@ -317,15 +319,15 @@ unNOT1 = axiom
 --------------------------------------------------------------------------------
 
 newtype Named (n :: k) (a :: Type) = MkNamed a
-  deriving newtype
-    ( Eq
-    , Ord
-    , Show
-    , Ae.ToJSON
-    , Csv.ToField
-    , Csv.ToRecord
-    , Csv.DefaultOrdered
-    )
+   deriving newtype
+      ( Eq
+      , Ord
+      , Show
+      , Ae.ToJSON
+      , Csv.ToField
+      , Csv.ToRecord
+      , Csv.DefaultOrdered
+      )
 
 type role Named nominal representational
 type (@) = Named
@@ -343,39 +345,39 @@ pattern Named a <- (unNamed -> a)
 {-# COMPLETE Named #-}
 
 name
-  :: forall {kn} a b
-   . a
-  -> (forall (n :: kn). n @ a -> b)
-  -> b
+   :: forall {kn} a b
+    . a
+   -> (forall (n :: kn). n @ a -> b)
+   -> b
 name a f = f (MkNamed a)
 {-# INLINE name #-}
 
 unsafeMapNamed
-  :: forall {kn} a b (n :: kn)
-   . (a -> b)
-  -> n @ a
-  -> n @ b
+   :: forall {kn} a b (n :: kn)
+    . (a -> b)
+   -> n @ a
+   -> n @ b
 unsafeMapNamed f = \(Named a) -> unsafeNamed (f a)
 {-# INLINE unsafeMapNamed #-}
 
 --------------------------------------------------------------------------------
 
 data Disproved = Disproved String
-  deriving stock (Eq, Show)
-  deriving anyclass (Exception)
+   deriving stock (Eq, Show)
+   deriving anyclass (Exception)
 
 --------------------------------------------------------------------------------
 
 newtype Refined (p :: kn -> kp) (a :: Type) = MkRefined a
-  deriving newtype
-    ( Eq
-    , Ord
-    , Show
-    , Ae.ToJSON
-    , Csv.ToField
-    , Csv.ToRecord
-    , Csv.DefaultOrdered
-    )
+   deriving newtype
+      ( Eq
+      , Ord
+      , Show
+      , Ae.ToJSON
+      , Csv.ToField
+      , Csv.ToRecord
+      , Csv.DefaultOrdered
+      )
 
 type role Refined nominal representational
 type a ? p = Refined p a
@@ -393,102 +395,102 @@ pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
 unsafeMapRefined
-  :: forall {kn} {kp} (p :: kn -> kp) a b
-   . (a -> b)
-  -> a ? p
-  -> b ? p
+   :: forall {kn} {kp} (p :: kn -> kp) a b
+    . (a -> b)
+   -> a ? p
+   -> b ? p
 unsafeMapRefined f = \(Refined a) -> unsafeRefined (f a)
 {-# INLINE unsafeMapRefined #-}
 
 refined
-  :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) a
-   . n @ a
-  -> Proof (p n)
-  -> a ? p
+   :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) a
+    . n @ a
+   -> Proof (p n)
+   -> a ? p
 refined (Named a) = \_ -> MkRefined a
 {-# INLINE refined #-}
 
 refineS
-  :: forall {kn} {kp} (p :: kn -> kp) a
-   . (Description1 p)
-  => a
-  -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
-  -> Either String (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a
+    . (Description1 p)
+   => a
+   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+   -> Either String (a ? p)
 refineS a f = name a $ \na ->
-  maybe (Left (description1 @p "")) (Right . refined na) (f na)
+   maybe (Left (description1 @p "")) (Right . refined na) (f na)
 {-# INLINE refineS #-}
 
 refineF
-  :: forall {kn} {kp} (p :: kn -> kp) a m
-   . (Description1 p, MonadFail m)
-  => a
-  -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
-  -> m (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a m
+    . (Description1 p, MonadFail m)
+   => a
+   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+   -> m (a ? p)
 refineF a f = either fail pure (refineS a f)
 {-# INLINE refineF #-}
 
 refineT
-  :: forall {kn} {kp} (p :: kn -> kp) a m
-   . (Description1 p, MonadThrow m)
-  => a
-  -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
-  -> m (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a m
+    . (Description1 p, MonadThrow m)
+   => a
+   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+   -> m (a ? p)
 refineT a f = either (throwM . Disproved) pure (refineS a f)
 {-# INLINE refineT #-}
 
 refine1S
-  :: forall {kn} {kp} (p :: kn -> kp) a m
-   . (Prove1 p a, Description1 p, MonadThrow m)
-  => a
-  -> Either String (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a m
+    . (Prove1 p a, Description1 p, MonadThrow m)
+   => a
+   -> Either String (a ? p)
 refine1S = \a -> name a $ \na -> refined na <$> prove1S na
 {-# INLINE refine1S #-}
 
 refine1T
-  :: forall {kn} {kp} (p :: kn -> kp) a m
-   . (Prove1 p a, Description1 p, MonadThrow m)
-  => a
-  -> m (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a m
+    . (Prove1 p a, Description1 p, MonadThrow m)
+   => a
+   -> m (a ? p)
 refine1T = \a -> name a $ \na -> refined na <$> prove1T na
 {-# INLINE refine1T #-}
 
 refine1F
-  :: forall {kn} {kp} (p :: kn -> kp) a m
-   . (Prove1 p a, Description1 p, MonadFail m)
-  => a
-  -> m (a ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a m
+    . (Prove1 p a, Description1 p, MonadFail m)
+   => a
+   -> m (a ? p)
 refine1F = \a -> name a $ \na -> refined na <$> prove1F na
 {-# INLINE refine1F #-}
 
 mapRefined
-  :: forall {kn} {kp} (p :: kn -> kp) a b m
-   . (forall (n :: kn). n @ a -> Proof (p n) -> m (b ? p))
-  -> a ? p
-  -> m (b ? p)
+   :: forall {kn} {kp} (p :: kn -> kp) a b m
+    . (forall (n :: kn). n @ a -> Proof (p n) -> m (b ? p))
+   -> a ? p
+   -> m (b ? p)
 mapRefined x = \f -> rename f x
 {-# INLINE mapRefined #-}
 
 rename
-  :: forall {kn} {kp} (p :: kn -> kp) a b
-   . a ? p
-  -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
-  -> b
+   :: forall {kn} {kp} (p :: kn -> kp) a b
+    . a ? p
+   -> (forall (n :: kn). n @ a -> Proof (p n) -> b)
+   -> b
 rename (Refined a) g = g (MkNamed a) axiom
 {-# INLINE rename #-}
 
 traverseRefined
-  :: (Traversable t, Applicative f)
-  => (forall n. n @ a -> Proof (p n) -> f b)
-  -> t (a ? p)
-  -> f (t b)
+   :: (Traversable t, Applicative f)
+   => (forall n. n @ a -> Proof (p n) -> f b)
+   -> t (a ? p)
+   -> f (t b)
 traverseRefined g = traverse (\r -> rename r g)
 {-# INLINE traverseRefined #-}
 
 forRefined
-  :: (Traversable t, Applicative f)
-  => t (a ? p)
-  -> (forall n. n @ a -> Proof (p n) -> f b)
-  -> f (t b)
+   :: (Traversable t, Applicative f)
+   => t (a ? p)
+   -> (forall n. n @ a -> Proof (p n) -> f b)
+   -> f (t b)
 forRefined t g = traverseRefined g t
 {-# INLINE forRefined #-}
 
@@ -597,107 +599,107 @@ neSym :: Proof (NE a b --> NE b a)
 neSym = axiom
 
 lt
-  :: (Ord x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (LT l r))) (Proof (LT l r))
+   :: (Ord x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (LT l r))) (Proof (LT l r))
 lt fa fb = \(Named la) (Named rb) ->
-  if fb rb < fa la then Right axiom else Left axiom
+   if fb rb < fa la then Right axiom else Left axiom
 
 eq
-  :: (Eq x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (EQ l r))) (Proof (EQ l r))
+   :: (Eq x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (EQ l r))) (Proof (EQ l r))
 eq fa fb = \(Named la) (Named rb) ->
-  if fb rb == fa la then Right axiom else Left axiom
+   if fb rb == fa la then Right axiom else Left axiom
 
 gt
-  :: (Ord x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (GT l r))) (Proof (GT l r))
+   :: (Ord x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (GT l r))) (Proof (GT l r))
 gt fa fb = \(Named la) (Named rb) ->
-  if fb rb > fa la then Right axiom else Left axiom
+   if fb rb > fa la then Right axiom else Left axiom
 
 le
-  :: (Ord x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (LE l r))) (Proof (LE l r))
+   :: (Ord x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (LE l r))) (Proof (LE l r))
 le fa fb = \l r ->
-  either
-    (Right . mp notGT)
-    (Left . mp gtNotLE)
-    (gt fa fb l r)
+   either
+      (Right . mp notGT)
+      (Left . mp gtNotLE)
+      (gt fa fb l r)
 
 ne
-  :: (Eq x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (NE l r))) (Proof (NE l r))
+   :: (Eq x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (NE l r))) (Proof (NE l r))
 ne fa fb = \l r ->
-  either
-    (Right . mp notEQ)
-    (Left . mp eqNotNE)
-    (eq fa fb l r)
+   either
+      (Right . mp notEQ)
+      (Left . mp eqNotNE)
+      (eq fa fb l r)
 
 ge
-  :: (Ord x)
-  => (a -> x)
-  -> (b -> x)
-  -> l @ a
-  -> r @ b
-  -> Either (Proof (NOT (GE l r))) (Proof (GE l r))
+   :: (Ord x)
+   => (a -> x)
+   -> (b -> x)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NOT (GE l r))) (Proof (GE l r))
 ge fa fb = \l r ->
-  either
-    (Right . mp notLT)
-    (Left . mp ltNotGE)
-    (lt fa fb l r)
+   either
+      (Right . mp notLT)
+      (Left . mp ltNotGE)
+      (lt fa fb l r)
 
 --------------------------------------------------------------------------------
 
 class Prove (p :: k) where
-  prove' :: Either (Proof (NOT p)) (Proof p)
+   prove' :: Either (Proof (NOT p)) (Proof p)
 
 prove :: forall {k} (p :: k). (Prove p) => Either (Proof (NOT p)) (Proof p)
 prove = prove' @k @p
 
 instance (Prove p) => Prove (NOT p) where
-  prove' = case prove @p of
-    Right _ -> Left axiom
-    Left _ -> Right axiom
+   prove' = case prove @p of
+      Right _ -> Left axiom
+      Left _ -> Right axiom
 
 instance forall p q na. (Prove (AND (p na) (q na))) => Prove (AND1 p q na) where
-  prove' = case prove @(AND (p na) (q na)) of
-    Right _ -> Right axiom
-    Left _ -> Left axiom
+   prove' = case prove @(AND (p na) (q na)) of
+      Right _ -> Right axiom
+      Left _ -> Left axiom
 
 instance forall p q. (Prove p, Prove q) => Prove (AND p q) where
-  prove' = case (prove @p, prove @q) of
-    (Right _, Right _) -> Right axiom
-    _ -> Left axiom
+   prove' = case (prove @p, prove @q) of
+      (Right _, Right _) -> Right axiom
+      _ -> Left axiom
 
 instance forall p q na. (Prove (OR (p na) (q na))) => Prove (OR1 p q na) where
-  prove' = case prove @(OR (p na) (q na)) of
-    Right _ -> Right axiom
-    Left _ -> Left axiom
+   prove' = case prove @(OR (p na) (q na)) of
+      Right _ -> Right axiom
+      Left _ -> Left axiom
 
 instance forall p q. (Prove p, Prove q) => Prove (OR p q) where
-  prove' = case (prove @p, prove @q) of
-    (Right _, _) -> Right axiom
-    (_, Right _) -> Right axiom
-    _ -> Left axiom
+   prove' = case (prove @p, prove @q) of
+      (Right _, _) -> Right axiom
+      (_, Right _) -> Right axiom
+      _ -> Left axiom
 
 -------------------------------------------------------------------------------
 
@@ -706,355 +708,391 @@ description1 = description1' @kn @kp @p
 {-# INLINE description1 #-}
 
 class Description1 (p :: kn -> kp) where
-  description1' :: ShowS
+   description1' :: ShowS
 
 instance forall p. (Description1 p) => Description1 (NOT1 p) where
-  description1' = showString "not (" . description1 @p . showChar ')'
+   description1' = showString "not (" . description1 @p . showChar ')'
 
 instance
-  forall l r
-   . (Description1 l, Description1 r)
-  => Description1 (AND1 l r)
-  where
-  description1' =
-    showChar '('
-      . description1 @l
-      . showString ") and ("
-      . description1 @r
-      . showChar ')'
+   forall l r
+    . (Description1 l, Description1 r)
+   => Description1 (AND1 l r)
+   where
+   description1' =
+      showChar '('
+         . description1 @l
+         . showString ") and ("
+         . description1 @r
+         . showChar ')'
 
 instance
-  forall l r
-   . (Description1 l, Description1 r)
-  => Description1 (OR1 l r)
-  where
-  description1' =
-    showChar '('
-      . description1 @l
-      . showString ") or ("
-      . description1 @r
-      . showChar ')'
+   forall l r
+    . (Description1 l, Description1 r)
+   => Description1 (OR1 l r)
+   where
+   description1' =
+      showChar '('
+         . description1 @l
+         . showString ") or ("
+         . description1 @r
+         . showChar ')'
 
 instance
-  {-# OVERLAPPABLE #-}
-  forall k n
-   . (SingKind k, SingI n, Show (Demote k))
-  => Description1 (GT (n :: k))
-  where
-  description1' = showString "more than " . showsPrec appPrec1 (demote @n)
+   {-# OVERLAPPABLE #-}
+   forall k n
+    . (SingKind k, SingI n, Show (Demote k))
+   => Description1 (GT (n :: k))
+   where
+   description1' = showString "more than " . showsPrec appPrec1 (demote @n)
 
 instance
-  {-# OVERLAPPABLE #-}
-  forall k n
-   . (SingKind k, SingI n, Show (Demote k))
-  => Description1 (LT (n :: k))
-  where
-  description1' = showString "less than " . showsPrec appPrec1 (demote @n)
+   {-# OVERLAPPABLE #-}
+   forall k n
+    . (SingKind k, SingI n, Show (Demote k))
+   => Description1 (LT (n :: k))
+   where
+   description1' = showString "less than " . showsPrec appPrec1 (demote @n)
 
 instance
-  {-# OVERLAPPABLE #-}
-  forall k n
-   . (SingKind k, SingI n, Show (Demote k))
-  => Description1 (EQ (n :: k))
-  where
-  description1' = showString "equal to " . showsPrec appPrec1 (demote @n)
+   {-# OVERLAPPABLE #-}
+   forall k n
+    . (SingKind k, SingI n, Show (Demote k))
+   => Description1 (EQ (n :: k))
+   where
+   description1' = showString "equal to " . showsPrec appPrec1 (demote @n)
 
 --------------------------------------------------------------------------------
 
 class Prove1 (p :: kn -> kpn) a where
-  prove1E' :: n @ a -> Either (Proof (NOT (p n))) (Proof (p n))
+   prove1E' :: n @ a -> Either (Proof (NOT (p n))) (Proof (p n))
 
 prove1E
-  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
-   . (Prove1 p a)
-  => n @ a
-  -> Either (Proof (NOT (p n))) (Proof (p n))
+   :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
+    . (Prove1 p a)
+   => n @ a
+   -> Either (Proof (NOT (p n))) (Proof (p n))
 prove1E = prove1E'
 {-# INLINE prove1E #-}
 
 prove1T
-  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
-   . (Prove1 p a, Description1 p, MonadThrow m)
-  => n @ a
-  -> m (Proof (p n))
+   :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
+    . (Prove1 p a, Description1 p, MonadThrow m)
+   => n @ a
+   -> m (Proof (p n))
 prove1T = either (throwM . Disproved) pure . prove1S
 {-# INLINE prove1T #-}
 
 prove1F
-  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
-   . (Prove1 p a, Description1 p, MonadFail m)
-  => n @ a
-  -> m (Proof (p n))
+   :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn) m
+    . (Prove1 p a, Description1 p, MonadFail m)
+   => n @ a
+   -> m (Proof (p n))
 prove1F = either fail pure . prove1S
 {-# INLINE prove1F #-}
 
 prove1S
-  :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
-   . (Prove1 p a, Description1 p)
-  => n @ a
-  -> Either String (Proof (p n))
+   :: forall {kn} {kpn} (p :: kn -> kpn) a (n :: kn)
+    . (Prove1 p a, Description1 p)
+   => n @ a
+   -> Either String (Proof (p n))
 prove1S = first (\_ -> description1 @p "") . prove1E
 {-# INLINE prove1S #-}
 
 instance (Prove1 p a) => Prove1 (NOT1 p) a where
-  {-# INLINE prove1E' #-}
-  prove1E' = \na -> case prove1E @p @a na of
-    Left _ -> Right axiom
-    _ -> Left axiom
+   {-# INLINE prove1E' #-}
+   prove1E' = \na -> case prove1E @p @a na of
+      Left _ -> Right axiom
+      _ -> Left axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (AND1 f g) a where
-  {-# INLINE prove1E' #-}
-  prove1E' = \na -> case (prove1E @f @a na, prove1E @g @a na) of
-    (Right _, Right _) -> Right axiom
-    _ -> Left axiom
+   {-# INLINE prove1E' #-}
+   prove1E' = \na -> case (prove1E @f @a na, prove1E @g @a na) of
+      (Right _, Right _) -> Right axiom
+      _ -> Left axiom
 
 instance (Prove1 f a, Prove1 g a) => Prove1 (OR1 f g) a where
-  {-# INLINE prove1E' #-}
-  prove1E' = \na -> case (prove1E @f @a na, prove1E @g @a na) of
-    (Right _, _) -> Right axiom
-    (_, Right _) -> Right axiom
-    _ -> Left axiom
+   {-# INLINE prove1E' #-}
+   prove1E' = \na -> case (prove1E @f @a na, prove1E @g @a na) of
+      (Right _, _) -> Right axiom
+      (_, Right _) -> Right axiom
+      _ -> Left axiom
 
 instance (Prove1 p a) => Prove1 p (Tagged x a) where
-  {-# INLINE prove1E' #-}
-  prove1E' = prove1E' . unsafeMapNamed unTagged
+   {-# INLINE prove1E' #-}
+   prove1E' = prove1E' . unsafeMapNamed unTagged
 
 --------------------------------------------------------------------------------
 
 instance (Ord x) => Prove2 LT x x where
-  {-# INLINE prove2E' #-}
-  prove2E' = \cases
-    nz na
-      | unNamed na < unNamed nz -> Right axiom
-      | otherwise -> Left axiom
+   {-# INLINE prove2E' #-}
+   prove2E' = \cases
+      nz na
+         | unNamed na < unNamed nz -> Right axiom
+         | otherwise -> Left axiom
 
 instance (Ord x) => Prove2 GT x x where
-  {-# INLINE prove2E' #-}
-  prove2E' = \cases
-    na nz
-      | unNamed nz > unNamed na -> Right axiom
-      | otherwise -> Left axiom
+   {-# INLINE prove2E' #-}
+   prove2E' = \cases
+      na nz
+         | unNamed nz > unNamed na -> Right axiom
+         | otherwise -> Left axiom
 
 instance (Ord x) => Prove2 EQ x x where
-  {-# INLINE prove2E' #-}
-  prove2E' = \cases
-    na nb
-      | unNamed nb == unNamed na -> Right axiom
-      | otherwise -> Left axiom
+   {-# INLINE prove2E' #-}
+   prove2E' = \cases
+      na nb
+         | unNamed nb == unNamed na -> Right axiom
+         | otherwise -> Left axiom
 
 instance
-  {-# OVERLAPPABLE #-}
-  forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) b
-   . (SingKind ka, SingI na, Prove2 p (Demote ka) b)
-  => Prove1 (p na) b
-  where
-  prove1E' = prove2E (namedDemote @na)
-  {-# INLINE prove1E' #-}
+   {-# OVERLAPPABLE #-}
+   forall ka kb kp (p :: ka -> kb -> kp) (na :: ka) b
+    . (SingKind ka, SingI na, Prove2 p (Demote ka) b)
+   => Prove1 (p na) b
+   where
+   prove1E' = prove2E (namedDemote @na)
+   {-# INLINE prove1E' #-}
 
 namedDemote :: forall {k} (n :: k). (SingKind k, SingI n) => n @ Demote k
 namedDemote = unsafeNamed (demote @n)
 {-# INLINE namedDemote #-}
 
-class Prove2 (p :: kna -> knb -> kpnanb) a b where
-  prove2E'
-    :: na @ a
-    -> nb @ b
-    -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
+class Prove2 (p :: ka -> kb -> kpab) a b where
+   prove2E'
+      :: na @ a
+      -> nb @ b
+      -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 
 prove2E
-  :: forall
-    {kna}
-    {knb}
-    {kpnanb}
-    (p :: kna -> knb -> kpnanb)
-    a
-    b
-    (na :: kna)
-    (nb :: knb)
-   . (Prove2 p a b)
-  => na @ a
-  -> nb @ b
-  -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
+   :: forall {ka} {kb} {kpab} (p :: ka -> kb -> kpab) a b na nb
+    . (Prove2 p a b)
+   => na @ a
+   -> nb @ b
+   -> Either (Proof (NOT (p na nb))) (Proof (p na nb))
 prove2E = prove2E'
 {-# INLINE prove2E #-}
 
 prove2S
-  :: forall
-    {kna}
-    {knb}
-    {kpnanb}
-    (p :: kna -> knb -> kpnanb)
-    a
-    b
-    (na :: kna)
-    (nb :: knb)
-   . (Prove2 p a b, Description1 p)
-  => na @ a
-  -> nb @ b
-  -> Either String (Proof (p na nb))
+   :: forall {ka} {kb} {kpab} (p :: ka -> kb -> kpab) a b na nb
+    . (Prove2 p a b, Description1 p)
+   => na @ a
+   -> nb @ b
+   -> Either String (Proof (p na nb))
 prove2S = \a b -> first (\_ -> description1 @p "") (prove2S a b)
 {-# INLINE prove2S #-}
 
 prove2F
-  :: forall
-    {kna}
-    {knb}
-    {kpnanb}
-    (p :: kna -> knb -> kpnanb)
-    a
-    b
-    (na :: kna)
-    (nb :: knb)
-    m
-   . (Prove2 p a b, Description1 p, MonadFail m)
-  => na @ a
-  -> nb @ b
-  -> m (Proof (p na nb))
+   :: forall {ka} {kb} {kpab} (p :: ka -> kb -> kpab) a b na nb m
+    . (Prove2 p a b, Description1 p, MonadFail m)
+   => na @ a
+   -> nb @ b
+   -> m (Proof (p na nb))
 prove2F = \a b -> either fail pure (prove2S a b)
 {-# INLINE prove2F #-}
 
 prove2T
-  :: forall
-    {kna}
-    {knb}
-    {kpnanb}
-    (p :: kna -> knb -> kpnanb)
-    a
-    b
-    (na :: kna)
-    (nb :: knb)
-    m
-   . (Prove2 p a b, Description1 p, MonadThrow m)
-  => na @ a
-  -> nb @ b
-  -> m (Proof (p na nb))
+   :: forall {ka} {kb} {kpab} (p :: ka -> kb -> kpab) a b na nb m
+    . (Prove2 p a b, Description1 p, MonadThrow m)
+   => na @ a
+   -> nb @ b
+   -> m (Proof (p na nb))
 prove2T = \a b -> either (throwM . Disproved) pure (prove2S a b)
 {-# INLINE prove2T #-}
 
 instance (Prove2 p a b) => Prove2 p (Tagged x a) (Tagged y b) where
-  {-# INLINE prove2E' #-}
-  prove2E' = \nta ntb ->
-    prove2E'
-      (unsafeMapNamed unTagged nta)
-      (unsafeMapNamed unTagged ntb)
+   {-# INLINE prove2E' #-}
+   prove2E' = \nta ntb ->
+      prove2E'
+         (unsafeMapNamed unTagged nta)
+         (unsafeMapNamed unTagged ntb)
 
 --------------------------------------------------------------------------------
 
 instance
-  (Csv.FromField a, Prove1 p a, Description1 p)
-  => Csv.FromField (a ? p)
-  where
-  parseField = Csv.parseField >=> refine1F
-  {-# INLINE parseField #-}
+   (Csv.FromField a, Prove1 p a, Description1 p)
+   => Csv.FromField (a ? p)
+   where
+   parseField = Csv.parseField >=> refine1F
+   {-# INLINE parseField #-}
 
 instance
-  (Csv.FromRecord a, Prove1 p a, Description1 p)
-  => Csv.FromRecord (a ? p)
-  where
-  parseRecord = Csv.parseRecord >=> refine1F
-  {-# INLINE parseRecord #-}
+   (Csv.FromRecord a, Prove1 p a, Description1 p)
+   => Csv.FromRecord (a ? p)
+   where
+   parseRecord = Csv.parseRecord >=> refine1F
+   {-# INLINE parseRecord #-}
 
 --------------------------------------------------------------------------------
 
 instance
-  (Ae.FromJSON a, Prove1 p a, Description1 p)
-  => Ae.FromJSON (a ? p)
-  where
-  parseJSON = \v -> Ae.parseJSON v >>= refine1F
-  {-# INLINE parseJSON #-}
+   (Ae.FromJSON a, Prove1 p a, Description1 p)
+   => Ae.FromJSON (a ? p)
+   where
+   parseJSON = \v -> Ae.parseJSON v >>= refine1F
+   {-# INLINE parseJSON #-}
 
 --------------------------------------------------------------------------------
 
 instance (Bin.Binary a, Prove1 p a, Description1 p) => Bin.Binary (a ? p) where
-  put = \(Refined a) -> Bin.put a
-  {-# INLINE put #-}
-  get = Bin.get >>= refine1F
-  {-# INLINE get #-}
+   put = \(Refined a) -> Bin.put a
+   {-# INLINE put #-}
+   get = Bin.get >>= refine1F
+   {-# INLINE get #-}
 
 --------------------------------------------------------------------------------
 
 #define INST_VIA(D, U, f) \
-  instance PDP.Prove2 p U U => PDP.Prove2 p D U where { \
-    prove2E' = \nta ntb -> \
-      PDP.prove2E' (PDP.unsafeMapNamed (f :: D -> U) nta) ntb; \
+  instance Prove2 p (U) (U) => Prove2 p (D) (U) where { \
+    prove2E' = (\g -> \nta ntb -> prove2E' (unsafeMapNamed g nta) ntb) \
+               ((f) :: (D) -> (U)); \
     {-# INLINE prove2E' #-}; \
   }; \
-  instance PDP.Prove2 p U U => PDP.Prove2 p U D where { \
-    prove2E' = \nta ntb -> \
-      PDP.prove2E' nta (PDP.unsafeMapNamed (f :: D -> U) ntb); \
+  instance Prove2 p (U) (U) => Prove2 p (U) (D) where { \
+    prove2E' = (\g -> \nta ntb -> prove2E' nta (unsafeMapNamed g ntb)) \
+               ((f) :: (D) -> (U)); \
     {-# INLINE prove2E' #-}; \
   };
 
-INST_VIA(Int, Int64, fromIntegral)
-INST_VIA(Int, Integer, fromIntegral)
-INST_VIA(Int, Rational, fromIntegral)
-INST_VIA(Int, Scientific, fromIntegral)
+INST_VIA (Int, Int64, fromIntegral)
+INST_VIA (Int, Integer, fromIntegral)
+INST_VIA (Int, Rational, fromIntegral)
+INST_VIA (Int, Scientific, fromIntegral)
+INST_VIA (Int, Fixed E0, fromIntegral)
+INST_VIA (Int, Fixed E1, fromIntegral)
+INST_VIA (Int, Fixed E2, fromIntegral)
+INST_VIA (Int, Fixed E3, fromIntegral)
+INST_VIA (Int, Fixed E6, fromIntegral)
+INST_VIA (Int, Fixed E9, fromIntegral)
+INST_VIA (Int, Fixed E12, fromIntegral)
 
-INST_VIA(Int8, Int16, fromIntegral)
-INST_VIA(Int8, Int32, fromIntegral)
-INST_VIA(Int8, Int64, fromIntegral)
-INST_VIA(Int8, Integer, fromIntegral)
-INST_VIA(Int8, Float, fromIntegral)
-INST_VIA(Int8, Double, fromIntegral)
-INST_VIA(Int8, Rational, fromIntegral)
-INST_VIA(Int8, Scientific, fromIntegral)
+INST_VIA (Int8, Int16, fromIntegral)
+INST_VIA (Int8, Int32, fromIntegral)
+INST_VIA (Int8, Int64, fromIntegral)
+INST_VIA (Int8, Integer, fromIntegral)
+INST_VIA (Int8, Float, fromIntegral)
+INST_VIA (Int8, Double, fromIntegral)
+INST_VIA (Int8, Rational, fromIntegral)
+INST_VIA (Int8, Scientific, fromIntegral)
+INST_VIA (Int8, Fixed E0, fromIntegral)
+INST_VIA (Int8, Fixed E1, fromIntegral)
+INST_VIA (Int8, Fixed E2, fromIntegral)
+INST_VIA (Int8, Fixed E3, fromIntegral)
+INST_VIA (Int8, Fixed E6, fromIntegral)
+INST_VIA (Int8, Fixed E9, fromIntegral)
+INST_VIA (Int8, Fixed E12, fromIntegral)
 
-INST_VIA(Int16, Int32, fromIntegral)
-INST_VIA(Int16, Int64, fromIntegral)
-INST_VIA(Int16, Integer, fromIntegral)
-INST_VIA(Int16, Float, fromIntegral)
-INST_VIA(Int16, Double, fromIntegral)
-INST_VIA(Int16, Rational, fromIntegral)
-INST_VIA(Int16, Scientific, fromIntegral)
+INST_VIA (Int16, Int32, fromIntegral)
+INST_VIA (Int16, Int64, fromIntegral)
+INST_VIA (Int16, Integer, fromIntegral)
+INST_VIA (Int16, Float, fromIntegral)
+INST_VIA (Int16, Double, fromIntegral)
+INST_VIA (Int16, Rational, fromIntegral)
+INST_VIA (Int16, Scientific, fromIntegral)
+INST_VIA (Int16, Fixed E0, fromIntegral)
+INST_VIA (Int16, Fixed E1, fromIntegral)
+INST_VIA (Int16, Fixed E2, fromIntegral)
+INST_VIA (Int16, Fixed E3, fromIntegral)
+INST_VIA (Int16, Fixed E6, fromIntegral)
+INST_VIA (Int16, Fixed E9, fromIntegral)
+INST_VIA (Int16, Fixed E12, fromIntegral)
 
-INST_VIA(Int32, Int64, fromIntegral)
-INST_VIA(Int32, Integer, fromIntegral)
-INST_VIA(Int32, Double, fromIntegral)
-INST_VIA(Int32, Rational, fromIntegral)
-INST_VIA(Int32, Scientific, fromIntegral)
+INST_VIA (Int32, Int64, fromIntegral)
+INST_VIA (Int32, Integer, fromIntegral)
+INST_VIA (Int32, Double, fromIntegral)
+INST_VIA (Int32, Rational, fromIntegral)
+INST_VIA (Int32, Scientific, fromIntegral)
+INST_VIA (Int32, Fixed E0, fromIntegral)
+INST_VIA (Int32, Fixed E1, fromIntegral)
+INST_VIA (Int32, Fixed E2, fromIntegral)
+INST_VIA (Int32, Fixed E3, fromIntegral)
+INST_VIA (Int32, Fixed E6, fromIntegral)
+INST_VIA (Int32, Fixed E9, fromIntegral)
+INST_VIA (Int32, Fixed E12, fromIntegral)
 
-INST_VIA(Int64, Integer, fromIntegral)
-INST_VIA(Int64, Rational, fromIntegral)
-INST_VIA(Int64, Scientific, fromIntegral)
+INST_VIA (Int64, Integer, fromIntegral)
+INST_VIA (Int64, Rational, fromIntegral)
+INST_VIA (Int64, Scientific, fromIntegral)
+INST_VIA (Int64, Fixed E0, fromIntegral)
+INST_VIA (Int64, Fixed E1, fromIntegral)
+INST_VIA (Int64, Fixed E2, fromIntegral)
+INST_VIA (Int64, Fixed E3, fromIntegral)
+INST_VIA (Int64, Fixed E6, fromIntegral)
+INST_VIA (Int64, Fixed E9, fromIntegral)
+INST_VIA (Int64, Fixed E12, fromIntegral)
 
-INST_VIA(Word, Integer, fromIntegral)
-INST_VIA(Word, Natural, fromIntegral)
-INST_VIA(Word, Word64, fromIntegral)
-INST_VIA(Word, Rational, fromIntegral)
-INST_VIA(Word, Scientific, fromIntegral)
+INST_VIA (Word, Integer, fromIntegral)
+INST_VIA (Word, Natural, fromIntegral)
+INST_VIA (Word, Word64, fromIntegral)
+INST_VIA (Word, Rational, fromIntegral)
+INST_VIA (Word, Scientific, fromIntegral)
+INST_VIA (Word, Fixed E0, fromIntegral)
+INST_VIA (Word, Fixed E1, fromIntegral)
+INST_VIA (Word, Fixed E2, fromIntegral)
+INST_VIA (Word, Fixed E3, fromIntegral)
+INST_VIA (Word, Fixed E6, fromIntegral)
+INST_VIA (Word, Fixed E9, fromIntegral)
+INST_VIA (Word, Fixed E12, fromIntegral)
 
-INST_VIA(Word8, Integer, fromIntegral)
-INST_VIA(Word8, Natural, fromIntegral)
-INST_VIA(Word8, Word16, fromIntegral)
-INST_VIA(Word8, Word32, fromIntegral)
-INST_VIA(Word8, Word64, fromIntegral)
-INST_VIA(Word8, Float, fromIntegral)
-INST_VIA(Word8, Double, fromIntegral)
-INST_VIA(Word8, Rational, fromIntegral)
-INST_VIA(Word8, Scientific, fromIntegral)
+INST_VIA (Word8, Integer, fromIntegral)
+INST_VIA (Word8, Natural, fromIntegral)
+INST_VIA (Word8, Word16, fromIntegral)
+INST_VIA (Word8, Word32, fromIntegral)
+INST_VIA (Word8, Word64, fromIntegral)
+INST_VIA (Word8, Float, fromIntegral)
+INST_VIA (Word8, Double, fromIntegral)
+INST_VIA (Word8, Rational, fromIntegral)
+INST_VIA (Word8, Scientific, fromIntegral)
+INST_VIA (Word8, Fixed E0, fromIntegral)
+INST_VIA (Word8, Fixed E1, fromIntegral)
+INST_VIA (Word8, Fixed E2, fromIntegral)
+INST_VIA (Word8, Fixed E3, fromIntegral)
+INST_VIA (Word8, Fixed E6, fromIntegral)
+INST_VIA (Word8, Fixed E9, fromIntegral)
+INST_VIA (Word8, Fixed E12, fromIntegral)
 
-INST_VIA(Word16, Integer, fromIntegral)
-INST_VIA(Word16, Natural, fromIntegral)
-INST_VIA(Word16, Word32, fromIntegral)
-INST_VIA(Word16, Word64, fromIntegral)
-INST_VIA(Word16, Float, fromIntegral)
-INST_VIA(Word16, Double, fromIntegral)
-INST_VIA(Word16, Rational, fromIntegral)
-INST_VIA(Word16, Scientific, fromIntegral)
+INST_VIA (Word16, Integer, fromIntegral)
+INST_VIA (Word16, Natural, fromIntegral)
+INST_VIA (Word16, Word32, fromIntegral)
+INST_VIA (Word16, Word64, fromIntegral)
+INST_VIA (Word16, Float, fromIntegral)
+INST_VIA (Word16, Double, fromIntegral)
+INST_VIA (Word16, Rational, fromIntegral)
+INST_VIA (Word16, Scientific, fromIntegral)
+INST_VIA (Word16, Fixed E0, fromIntegral)
+INST_VIA (Word16, Fixed E1, fromIntegral)
+INST_VIA (Word16, Fixed E2, fromIntegral)
+INST_VIA (Word16, Fixed E3, fromIntegral)
+INST_VIA (Word16, Fixed E6, fromIntegral)
+INST_VIA (Word16, Fixed E9, fromIntegral)
+INST_VIA (Word16, Fixed E12, fromIntegral)
 
-INST_VIA(Word32, Integer, fromIntegral)
-INST_VIA(Word32, Natural, fromIntegral)
-INST_VIA(Word32, Word64, fromIntegral)
-INST_VIA(Word32, Double, fromIntegral)
-INST_VIA(Word32, Rational, fromIntegral)
-INST_VIA(Word32, Scientific, fromIntegral)
+INST_VIA (Word32, Integer, fromIntegral)
+INST_VIA (Word32, Natural, fromIntegral)
+INST_VIA (Word32, Word64, fromIntegral)
+INST_VIA (Word32, Double, fromIntegral)
+INST_VIA (Word32, Rational, fromIntegral)
+INST_VIA (Word32, Scientific, fromIntegral)
+INST_VIA (Word32, Fixed E0, fromIntegral)
+INST_VIA (Word32, Fixed E1, fromIntegral)
+INST_VIA (Word32, Fixed E2, fromIntegral)
+INST_VIA (Word32, Fixed E3, fromIntegral)
+INST_VIA (Word32, Fixed E6, fromIntegral)
+INST_VIA (Word32, Fixed E9, fromIntegral)
+INST_VIA (Word32, Fixed E12, fromIntegral)
 
-INST_VIA(Word64, Integer, fromIntegral)
-INST_VIA(Word64, Natural, fromIntegral)
-INST_VIA(Word64, Rational, fromIntegral)
-INST_VIA(Word64, Scientific, fromIntegral)
+INST_VIA (Word64, Integer, fromIntegral)
+INST_VIA (Word64, Natural, fromIntegral)
+INST_VIA (Word64, Rational, fromIntegral)
+INST_VIA (Word64, Scientific, fromIntegral)
+INST_VIA (Word64, Fixed E0, fromIntegral)
+INST_VIA (Word64, Fixed E1, fromIntegral)
+INST_VIA (Word64, Fixed E2, fromIntegral)
+INST_VIA (Word64, Fixed E3, fromIntegral)
+INST_VIA (Word64, Fixed E6, fromIntegral)
+INST_VIA (Word64, Fixed E9, fromIntegral)
+INST_VIA (Word64, Fixed E12, fromIntegral)
 
-INST_VIA(Float, Double, realToFrac)
+INST_VIA (Float, Double, realToFrac)
 
 #if WORD_SIZE_IN_BITS == 64
 INST_VIA(Word64, Word, fromIntegral)
@@ -1066,10 +1104,107 @@ INST_VIA(Word, Word32, fromIntegral)
 INST_VIA(Word, Double, fromIntegral)
 #endif
 
-INST_VIA(Natural, Integer, fromIntegral)
-INST_VIA(Natural, Rational, fromIntegral)
-INST_VIA(Natural, Scientific, fromIntegral)
+INST_VIA (Natural, Integer, fromIntegral)
+INST_VIA (Natural, Rational, fromIntegral)
+INST_VIA (Natural, Scientific, fromIntegral)
 
-INST_VIA(Integer, Rational, fromIntegral)
-INST_VIA(Integer, Scientific, fromIntegral)
+INST_VIA (Integer, Rational, fromIntegral)
+INST_VIA (Integer, Scientific, fromIntegral)
 
+INST_VIA (Natural, Fixed E0, fromIntegral)
+INST_VIA (Natural, Fixed E1, fromIntegral)
+INST_VIA (Natural, Fixed E2, fromIntegral)
+INST_VIA (Natural, Fixed E3, fromIntegral)
+INST_VIA (Natural, Fixed E6, fromIntegral)
+INST_VIA (Natural, Fixed E9, fromIntegral)
+INST_VIA (Natural, Fixed E12, fromIntegral)
+INST_VIA (Integer, Fixed E0, fromIntegral)
+INST_VIA (Integer, Fixed E1, fromIntegral)
+INST_VIA (Integer, Fixed E2, fromIntegral)
+INST_VIA (Integer, Fixed E3, fromIntegral)
+INST_VIA (Integer, Fixed E6, fromIntegral)
+INST_VIA (Integer, Fixed E9, fromIntegral)
+INST_VIA (Integer, Fixed E12, fromIntegral)
+INST_VIA (Fixed E0, Fixed E1, realToFrac)
+INST_VIA (Fixed E0, Fixed E2, realToFrac)
+INST_VIA (Fixed E0, Fixed E3, realToFrac)
+INST_VIA (Fixed E0, Fixed E6, realToFrac)
+INST_VIA (Fixed E0, Fixed E9, realToFrac)
+INST_VIA (Fixed E0, Fixed E12, realToFrac)
+INST_VIA (Fixed E1, Fixed E2, realToFrac)
+INST_VIA (Fixed E1, Fixed E3, realToFrac)
+INST_VIA (Fixed E1, Fixed E6, realToFrac)
+INST_VIA (Fixed E1, Fixed E9, realToFrac)
+INST_VIA (Fixed E1, Fixed E12, realToFrac)
+INST_VIA (Fixed E2, Fixed E3, realToFrac)
+INST_VIA (Fixed E2, Fixed E6, realToFrac)
+INST_VIA (Fixed E2, Fixed E9, realToFrac)
+INST_VIA (Fixed E2, Fixed E12, realToFrac)
+INST_VIA (Fixed E3, Fixed E6, realToFrac)
+INST_VIA (Fixed E3, Fixed E9, realToFrac)
+INST_VIA (Fixed E3, Fixed E12, realToFrac)
+INST_VIA (Fixed E6, Fixed E9, realToFrac)
+INST_VIA (Fixed E6, Fixed E12, realToFrac)
+INST_VIA (Fixed E9, Fixed E12, realToFrac)
+
+INST_VIA (Natural, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Word, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Word8, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Word16, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Word32, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Word64, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Integer, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Int, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Int8, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Int16, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Int32, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Int64, Time.NominalDiffTime, fromIntegral)
+INST_VIA (Fixed E0, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E1, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E2, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E3, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E6, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E9, Time.NominalDiffTime, realToFrac)
+INST_VIA (Fixed E12, Time.NominalDiffTime, realToFrac)
+
+INST_VIA (Natural, Time.DiffTime, fromIntegral)
+INST_VIA (Word, Time.DiffTime, fromIntegral)
+INST_VIA (Word8, Time.DiffTime, fromIntegral)
+INST_VIA (Word16, Time.DiffTime, fromIntegral)
+INST_VIA (Word32, Time.DiffTime, fromIntegral)
+INST_VIA (Word64, Time.DiffTime, fromIntegral)
+INST_VIA (Integer, Time.DiffTime, fromIntegral)
+INST_VIA (Int, Time.DiffTime, fromIntegral)
+INST_VIA (Int8, Time.DiffTime, fromIntegral)
+INST_VIA (Int16, Time.DiffTime, fromIntegral)
+INST_VIA (Int32, Time.DiffTime, fromIntegral)
+INST_VIA (Int64, Time.DiffTime, fromIntegral)
+INST_VIA (Fixed E0, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E1, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E2, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E3, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E6, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E9, Time.DiffTime, realToFrac)
+INST_VIA (Fixed E12, Time.DiffTime, realToFrac)
+
+INST_VIA (Time.DiffTime, Rational, toRational)
+INST_VIA (Time.DiffTime, Scientific, realToFrac)
+
+INST_VIA (Time.NominalDiffTime, Rational, toRational)
+INST_VIA (Time.NominalDiffTime, Scientific, realToFrac)
+
+INST_VIA (Fixed E0, Rational, toRational)
+INST_VIA (Fixed E1, Rational, toRational)
+INST_VIA (Fixed E2, Rational, toRational)
+INST_VIA (Fixed E3, Rational, toRational)
+INST_VIA (Fixed E6, Rational, toRational)
+INST_VIA (Fixed E9, Rational, toRational)
+INST_VIA (Fixed E12, Rational, toRational)
+
+INST_VIA (Fixed E0, Scientific, realToFrac)
+INST_VIA (Fixed E1, Scientific, realToFrac)
+INST_VIA (Fixed E2, Scientific, realToFrac)
+INST_VIA (Fixed E3, Scientific, realToFrac)
+INST_VIA (Fixed E6, Scientific, realToFrac)
+INST_VIA (Fixed E9, Scientific, realToFrac)
+INST_VIA (Fixed E12, Scientific, realToFrac)
