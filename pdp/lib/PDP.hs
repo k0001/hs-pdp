@@ -109,16 +109,22 @@ module PDP {--}
    , pattern Refined
    , type (?)
    , unRefined
-   , unsafeRefined
+   , unsafestRefined
    , mapRefined
-   , unsafeMapRefined
+   , unsafestMapRefined
    , refined
    , refineT
    , refineS
    , refineF
+   , unsafeRefine
    , refine1T
    , refine1S
    , refine1F
+   , unsafeRefine1
+   , mapRefine1T
+   , mapRefine1S
+   , mapRefine1F
+   , unsafeMapRefine1
    , rename
    , forRefined
    , traverseRefined
@@ -141,6 +147,7 @@ import Data.Tagged
 import Data.Time.Clock qualified as Time
 import Data.Word
 import GHC.Show (appPrec1)
+import GHC.Stack
 import Numeric.Natural
 
 --------------------------------------------------------------------------------
@@ -382,9 +389,9 @@ newtype Refined (p :: kn -> kp) (a :: Type) = MkRefined a
 type role Refined nominal representational
 type a ? p = Refined p a
 
-unsafeRefined :: forall p a. a -> a ? p
-unsafeRefined = coerce
-{-# INLINE unsafeRefined #-}
+unsafestRefined :: forall p a. a -> a ? p
+unsafestRefined = coerce
+{-# INLINE unsafestRefined #-}
 
 unRefined :: forall p a. a ? p -> a
 unRefined = coerce
@@ -394,13 +401,49 @@ pattern Refined :: forall p a. a -> a ? p
 pattern Refined a <- (unRefined -> a)
 {-# COMPLETE Refined #-}
 
-unsafeMapRefined
+unsafestMapRefined
    :: forall {kn} {kp} (p :: kn -> kp) a b
     . (a -> b)
    -> a ? p
    -> b ? p
-unsafeMapRefined f = \(Refined a) -> unsafeRefined (f a)
-{-# INLINE unsafeMapRefined #-}
+unsafestMapRefined f = unsafestRefined . f . PDP.unRefined
+{-# INLINE unsafestMapRefined #-}
+
+mapRefine1S
+   :: forall {kn} {kp} (p :: kn -> kp) a b
+    . (Prove1 p b, Description1 p)
+   => (a -> b)
+   -> a ? p
+   -> Either String (b ? p)
+mapRefine1S f = refine1S . f . PDP.unRefined
+{-# INLINE mapRefine1S #-}
+
+mapRefine1T
+   :: forall {kn} {kp} (p :: kn -> kp) a b m
+    . (Prove1 p b, Description1 p, MonadThrow m)
+   => (a -> b)
+   -> a ? p
+   -> m (b ? p)
+mapRefine1T f = refine1T . f . PDP.unRefined
+{-# INLINE mapRefine1T #-}
+
+mapRefine1F
+   :: forall {kn} {kp} (p :: kn -> kp) a b m
+    . (Prove1 p b, Description1 p, MonadFail m)
+   => (a -> b)
+   -> a ? p
+   -> m (b ? p)
+mapRefine1F f = refine1F . f . PDP.unRefined
+{-# INLINE mapRefine1F #-}
+
+unsafeMapRefine1
+   :: forall {kn} {kp} (p :: kn -> kp) a b
+    . (Prove1 p b, Description1 p)
+   => (a -> b)
+   -> a ? p
+   -> b ? p
+unsafeMapRefine1 f = unsafeRefine1 . f . PDP.unRefined
+{-# INLINE unsafeMapRefine1 #-}
 
 refined
    :: forall {kn} {kp} (p :: kn -> kp) (n :: kn) a
@@ -438,9 +481,18 @@ refineT
 refineT a f = either (throwM . Disproved) pure (refineS a f)
 {-# INLINE refineT #-}
 
+unsafeRefine
+   :: forall {kn} {kp} (p :: kn -> kp) a
+    . (Description1 p, HasCallStack)
+   => a
+   -> (forall (n :: kn). n @ a -> Maybe (Proof (p n)))
+   -> a ? p
+unsafeRefine a f = either error Prelude.id (refineS a f)
+{-# INLINE unsafeRefine #-}
+
 refine1S
-   :: forall {kn} {kp} (p :: kn -> kp) a m
-    . (Prove1 p a, Description1 p, MonadThrow m)
+   :: forall {kn} {kp} (p :: kn -> kp) a
+    . (Prove1 p a, Description1 p)
    => a
    -> Either String (a ? p)
 refine1S = \a -> name a $ \na -> refined na <$> prove1S na
@@ -461,6 +513,14 @@ refine1F
    -> m (a ? p)
 refine1F = \a -> name a $ \na -> refined na <$> prove1F na
 {-# INLINE refine1F #-}
+
+unsafeRefine1
+   :: forall {kn} {kp} (p :: kn -> kp) a
+    . (Prove1 p a, Description1 p, HasCallStack)
+   => a
+   -> a ? p
+unsafeRefine1 = either error Prelude.id . refine1S
+{-# INLINE unsafeRefine1 #-}
 
 mapRefined
    :: forall {kn} {kp} (p :: kn -> kp) a b m
