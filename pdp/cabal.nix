@@ -1,5 +1,6 @@
 { mkDerivation, aeson, base, binary, cassava, exceptions
 , kind-integer, kind-rational, lib, scientific, singletons, tagged
+, time
 }:
 mkDerivation {
   pname = "pdp";
@@ -7,7 +8,7 @@ mkDerivation {
   src = ./.;
   libraryHaskellDepends = [
     aeson base binary cassava exceptions kind-integer kind-rational
-    scientific singletons tagged
+    scientific singletons tagged time
   ];
   testHaskellDepends = [ base ];
   homepage = "https://github.com/k0001/hs-pdp";

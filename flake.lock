@@ -18,43 +18,34 @@
         "type": "github"
       }
     },
-    "hs_kind": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "singletons_3_2": "singletons_3_2"
-      },
+    "haskell-flake": {
       "locked": {
-        "lastModified": 1688697280,
-        "narHash": "sha256-zn/f59JGRP+32TcXYhLjScIq9CcU5ZDYg3JvDM9R/wo=",
-        "owner": "k0001",
-        "repo": "hs-kind",
-        "rev": "fbd33277bf628f7d356b63b8f3c4a30e9c63faf9",
+        "lastModified": 1761850356,
+        "narHash": "sha256-K1L7vq25E0JdbBqjtheC75wxEZEeOjeXHmdbOwlzvW4=",
+        "owner": "srid",
+        "repo": "haskell-flake",
+        "rev": "90830616b04500d81207bf15ff5cb13ac81a9c37",
         "type": "github"
       },
       "original": {
-        "owner": "k0001",
-        "repo": "hs-kind",
+        "owner": "srid",
+        "repo": "haskell-flake",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1683034936,
-        "narHash": "sha256-+2ApAjqstzBk3FNMlrYVKqX+wM1Q2/ovpLTR/euarpI=",
-        "owner": "NixOS",
+        "lastModified": 1756636162,
+        "narHash": "sha256-mBecwgUTWRgClJYqcF+y4O1bY8PQHqeDpB+zsAn+/zA=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "43297919d746de7b71fc83dba95272b2991ba20f",
+        "rev": "37ff64b7108517f8b6ba5705ee5085eac636a249",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "43297919d746de7b71fc83dba95272b2991ba20f",
+        "rev": "37ff64b7108517f8b6ba5705ee5085eac636a249",
         "type": "github"
       }
     },
@@ -79,25 +70,8 @@
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "hs_kind": "hs_kind",
+        "haskell-flake": "haskell-flake",
         "nixpkgs": "nixpkgs"
-      }
-    },
-    "singletons_3_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1678643624,
-        "narHash": "sha256-LfhcxM5+dRd9cb+kC4WqlgbR1anWvVwZoGsBZQ9MrpE=",
-        "owner": "goldfirere",
-        "repo": "singletons",
-        "rev": "f8a0708bf15289cc92a04c9902c3c2dc620a0b5e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "goldfirere",
-        "ref": "singletons-th-base-3.2",
-        "repo": "singletons",
-        "type": "github"
       }
     }
   },
