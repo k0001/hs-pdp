@@ -40,16 +40,8 @@ library
   hs-source-dirs: lib
   exposed-modules: PDP
   build-depends:
-    aeson,
-    binary,
-    cassava,
-    exceptions,
-    kind-integer,
-    kind-rational,
     scientific,
     singletons,
-    tagged,
-    time,
 
 test-suite test
   import: basic
