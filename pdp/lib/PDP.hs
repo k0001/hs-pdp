@@ -85,7 +85,7 @@ module PDP {--}
    , transLT
 
     -- * Named
-   , Name
+   , Name (Name)
    , Named
    , pattern Named
    , type (@)
@@ -109,19 +109,10 @@ import Data.Kind (Type)
 
 --------------------------------------------------------------------------------
 
--- The kind of names.
-data Name
-
 data Proof (p :: Type)
    = -- | Be careful with this constructor! Mostly just use it to define axioms.
      QED
    deriving (Eq, Ord, Show)
-
-data Pred
-  = PredTRUE
-  | PredNOT
-  | PredAND
-  | PredOR
 
 type a --> b = NOT a `OR` b
 type (-->) :: Type -> Type -> Type
@@ -136,7 +127,7 @@ type AND :: Type -> Type -> Type
 infixl 7 `AND`
 
 data AND1 f g x
-type AND1 :: (Name -> Type) -> (Name -> Type) -> Name -> Type
+type AND1 :: (Type -> Type) -> (Type -> Type) -> Type -> Type
 infixl 7 `AND1`
 
 data OR l r
@@ -144,14 +135,14 @@ type OR :: Type -> Type -> Type
 infixl 5 `OR`
 
 data OR1 f g x
-type OR1 :: (Name -> Type) -> (Name -> Type) -> Name -> Type
+type OR1 :: (Type -> Type) -> (Type -> Type) -> Type -> Type
 infixl 5 `OR1`
 
 data NOT a
 type NOT :: Type -> Type
 
 data NOT1 f x
-type NOT1 :: (Name -> Type) -> Name -> Type
+type NOT1 :: (Type -> Type) -> Type -> Type
 
 type XOR l r = (l `AND` NOT r) `OR` (NOT l `AND` r)
 type XOR :: Type -> Type -> Type
@@ -265,14 +256,18 @@ unNOT1 _ = QED
 
 --------------------------------------------------------------------------------
 
-type Named :: Name -> Type -> Type
+type Named :: Type -> Type -> Type
 newtype Named n a = UnsafeNamed a
    deriving newtype (Eq, Ord, Show)
 
 type role Named nominal representational
 type (@) = Named
 
-unsafeNamed :: forall n a. a -> n @ a
+-- | To define a new name, create a @newtype@ around 'Name' and use
+-- 'unsafeNamed'. Do not export the @newtype@ constructor.
+data Name = Name
+
+unsafeNamed :: forall n a. (Coercible Name n, Coercible n Name) => a -> n @ a
 unsafeNamed = coerce
 {-# INLINE unsafeNamed #-}
 
@@ -284,7 +279,7 @@ pattern Named :: forall n a. a -> n @ a
 pattern Named a <- (coerce -> a)
 {-# COMPLETE Named #-}
 
-named :: forall a b. a -> (forall (n :: Name). n @ a -> b) -> b
+named :: forall a b. a -> (forall (n :: Type). n @ a -> b) -> b
 named a f = f (coerce a)
 {-# INLINE named #-}
 
@@ -296,7 +291,7 @@ unsafeMapNamed = coerce
 
 type role Refined nominal representational
 
-type Refined :: (Name -> Type) -> Type -> Type
+type Refined :: (Type -> Type) -> Type -> Type
 newtype Refined p a = UnsafeRefined a
    deriving newtype (Eq, Ord, Show)
 
@@ -321,32 +316,32 @@ pattern Refined na pn <- (coerce &&& const QED -> (na, pn))
 -- | @x < y@, according to 'Ord'.
 data LT y x
 
-type LT :: Name -> Name -> Type
+type LT :: Type -> Type -> Type
 
 -- | @x == y@, according to 'Ord'.
 data EQ y x
 
-type EQ :: Name -> Name -> Type
+type EQ :: Type -> Type -> Type
 
 -- | @x > y@, according to 'Ord'.
 data GT y x
 
-type GT :: Name -> Name -> Type
+type GT :: Type -> Type -> Type
 
 -- | @x /= y@, according to 'Ord'.
 type NE y = OR1 (LT y) (GT y)
 
-type NE :: Name -> Name -> Type
+type NE :: Type -> Type -> Type
 
 -- | @x <= y@, according to 'Ord'.
 type LE y = OR1 (LT y) (EQ y)
 
-type LE :: Name -> Name -> Type
+type LE :: Type -> Type -> Type
 
 -- | @x >= y@, according to 'Ord'.
 type GE y = OR1 (GT y) (EQ y)
 
-type GE :: Name -> Name -> Type
+type GE :: Type -> Type -> Type
 
 transLT :: Proof (LT a b) -> Proof (LT b c) -> Proof (LT a c)
 transLT _ _ = QED
@@ -420,7 +415,7 @@ notGE _ = QED
 symNE :: Proof (NE a b) -> Proof (NE b a)
 symNE _ = QED
 
-data Cmp (l :: Name) (r :: Name)
+data Cmp (l :: Type) (r :: Type)
    = CmpLT (Proof (LT r l))
    | CmpEQ (Proof (EQ r l))
    | CmpGT (Proof (GT r l))
