@@ -52,11 +52,17 @@ module PDP {--}
    , inNOT1
    , unNOT1
    , LT
+   , lt
    , LE
+   , le
    , EQ
+   , eq
    , GE
+   , ge
    , GT
+   , gt
    , NE
+   , ne
    , Cmp (..)
    , cmp
    , asymGT
@@ -318,7 +324,7 @@ data LT y x
 
 type LT :: Type -> Type -> Type
 
--- | @x == y@, according to 'Ord'.
+-- | @x == y@, according to 'Eq'.
 data EQ y x
 
 type EQ :: Type -> Type -> Type
@@ -328,8 +334,8 @@ data GT y x
 
 type GT :: Type -> Type -> Type
 
--- | @x /= y@, according to 'Ord'.
-type NE y = OR1 (LT y) (GT y)
+-- | @x /= y@, according to 'Eq'.
+data NE y x
 
 type NE :: Type -> Type -> Type
 
@@ -416,9 +422,9 @@ symNE :: Proof (NE a b) -> Proof (NE b a)
 symNE _ = QED
 
 data Cmp (l :: Type) (r :: Type)
-   = CmpLT (Proof (LT r l))
-   | CmpEQ (Proof (EQ r l))
-   | CmpGT (Proof (GT r l))
+   = CmpLT (Proof (LT l r))
+   | CmpEQ (Proof (EQ l r))
+   | CmpGT (Proof (GT l r))
    deriving (Eq, Ord, Show)
 
 cmp :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Cmp l r
@@ -428,34 +434,74 @@ cmp fa fb (Named la) (Named rb) =
       EQ -> CmpEQ QED
       GT -> CmpGT QED
 
-{-
-lt :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (LT l r)
-lt fa fb (Named la) (Named rb) =
-   if fb rb < fa la then Right QED else Left QED
-{-# INLINE lt #-}
+lt
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (GE l r)) (Proof (LT l r))
+lt fa fb na nb = case cmp fa fb na nb of
+   CmpLT p -> Right p
+   CmpEQ p -> Left $ inOR1 $ inrOR p
+   CmpGT p -> Left $ inOR1 $ inlOR p
 
-eq :: (Eq w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (EQ l r)
-eq fa fb (Named la) (Named rb) =
-   if fb rb == fa la then Right QED else Left QED
-{-# INLINE eq #-}
+eq
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (NE l r)) (Proof (EQ l r))
+eq fa fb na nb = case cmp fa fb na nb of
+   CmpEQ p -> Right p
+   CmpLT p -> Left $ ltNE p
+   CmpGT p -> Left $ gtNE p
 
-gt :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (GT l r)
-gt fa fb (Named la) (Named rb) =
-   if fb rb > fa la then Right QED else Left QED
-{-# INLINE gt #-}
+gt
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (LE l r)) (Proof (GT l r))
+gt fa fb na nb = case cmp fa fb na nb of
+   CmpGT p -> Right p
+   CmpLT p -> Left $ inOR1 $ inlOR p
+   CmpEQ p -> Left $ inOR1 $ inrOR p
 
-le :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (LE l r)
-le fa fb (Named la) (Named rb) =
-   if fb rb <= fa la then Right QED else Left QED
-{-# INLINE le #-}
+le
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (GT l r)) (Proof (LE l r))
+le fa fb na nb = case cmp fa fb na nb of
+   CmpLT p -> Right $ inOR1 $ inlOR p
+   CmpEQ p -> Right $ inOR1 $ inrOR p
+   CmpGT p -> Left p
 
-ne :: (Eq w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (NE l r)
-ne fa fb (Named la) (Named rb) =
-   if fb rb /= fa la then Right QED else Left QED
-{-# INLINE ne #-}
+ne
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (EQ l r)) (Proof (NE l r))
+ne fa fb na nb = case cmp fa fb na nb of
+   CmpLT p -> Right $ ltNE p
+   CmpGT p -> Right $ gtNE p
+   CmpEQ p -> Left p
 
-ge :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (GE l r)
-ge fa fb (Named la) (Named rb) =
-   if fb rb >= fa la then Right QED else Left QED
-{-# INLINE ge #-}
--}
+ge
+   :: (Ord w)
+   => (a -> w)
+   -> (b -> w)
+   -> l @ a
+   -> r @ b
+   -> Either (Proof (LT l r)) (Proof (GE l r))
+ge fa fb na nb = case cmp fa fb na nb of
+   CmpEQ p -> Right $ inOR1 $ inrOR p
+   CmpGT p -> Right $ inOR1 $ inlOR p
+   CmpLT p -> Left p
