@@ -447,16 +447,15 @@ lt fa fb na nb = case cmp fa fb na nb of
    CmpGT p -> Left $ inOR1 $ inlOR p
 
 eq
-   :: (Ord w)
+   :: (Eq w)
    => (a -> w)
    -> (b -> w)
    -> l @ a
    -> r @ b
    -> Either (Proof (NE l r)) (Proof (EQ l r))
-eq fa fb na nb = case cmp fa fb na nb of
-   CmpEQ p -> Right p
-   CmpLT p -> Left $ ltNE p
-   CmpGT p -> Left $ gtNE p
+eq fa fb (Named na) (Named nb)
+   | fb nb == fa na = Right QED
+   | otherwise = Left QED
 
 gt
    :: (Ord w)
@@ -483,16 +482,15 @@ le fa fb na nb = case cmp fa fb na nb of
    CmpGT p -> Left p
 
 ne
-   :: (Ord w)
+   :: (Eq w)
    => (a -> w)
    -> (b -> w)
    -> l @ a
    -> r @ b
    -> Either (Proof (EQ l r)) (Proof (NE l r))
-ne fa fb na nb = case cmp fa fb na nb of
-   CmpLT p -> Right $ ltNE p
-   CmpGT p -> Right $ gtNE p
-   CmpEQ p -> Left p
+ne fa fb (Named na) (Named nb)
+   | fb nb /= fa na = Right QED
+   | otherwise = Left QED
 
 ge
    :: (Ord w)
