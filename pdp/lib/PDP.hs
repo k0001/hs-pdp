@@ -107,6 +107,7 @@ module PDP {--}
     -- * Misc
    , Description1 (..)
    , WellKnown (..)
+   , Decision
    ) -- }
 where
 
@@ -304,10 +305,11 @@ type Decision p = Either (Proof (NOT p)) (Proof p)
 
 --------------------------------------------------------------------------------
 
-newtype Refined (p :: kn -> kp) (a :: Type) = UnsafeRefined a
+type role Refined nominal representational
+
+newtype Refined p a = UnsafeRefined a
    deriving newtype (Eq, Ord, Show)
 
-type role Refined nominal representational
 type a ? p = Refined p a
 
 unsafeRefined :: forall p a. a -> a ? p
@@ -428,68 +430,32 @@ notGE _ = QED
 symNE :: Proof (NE a b) -> Proof (NE b a)
 symNE _ = QED
 
-lt
-   :: (Ord w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (LT l r))) (Proof (LT l r))
+lt :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (LT l r)
 lt fa fb (Named la) (Named rb) =
    if fb rb < fa la then Right QED else Left QED
 {-# INLINE lt #-}
 
-eq
-   :: (Eq w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (EQ l r))) (Proof (EQ l r))
+eq :: (Eq w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (EQ l r)
 eq fa fb (Named la) (Named rb) =
    if fb rb == fa la then Right QED else Left QED
 {-# INLINE eq #-}
 
-gt
-   :: (Ord w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (GT l r))) (Proof (GT l r))
+gt :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (GT l r)
 gt fa fb (Named la) (Named rb) =
    if fb rb > fa la then Right QED else Left QED
 {-# INLINE gt #-}
 
-le
-   :: (Ord w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (LE l r))) (Proof (LE l r))
+le :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (LE l r)
 le fa fb (Named la) (Named rb) =
    if fb rb <= fa la then Right QED else Left QED
 {-# INLINE le #-}
 
-ne
-   :: (Eq w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (NE l r))) (Proof (NE l r))
+ne :: (Eq w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (NE l r)
 ne fa fb (Named la) (Named rb) =
    if fb rb /= fa la then Right QED else Left QED
 {-# INLINE ne #-}
 
-ge
-   :: (Ord w)
-   => (a -> w)
-   -> (b -> w)
-   -> l @ a
-   -> r @ b
-   -> Either (Proof (NOT (GE l r))) (Proof (GE l r))
+ge :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (GE l r)
 ge fa fb (Named la) (Named rb) =
    if fb rb >= fa la then Right QED else Left QED
 {-# INLINE ge #-}
