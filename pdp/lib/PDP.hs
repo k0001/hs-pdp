@@ -52,17 +52,13 @@ module PDP {--}
    , inNOT1
    , unNOT1
    , LT
-   , lt
    , LE
-   , le
    , EQ
-   , eq
    , GE
-   , ge
    , GT
-   , gt
    , NE
-   , ne
+   , Cmp (..)
+   , cmp
    , asymGT
    , asymLT
    , eqNotNE
@@ -89,6 +85,7 @@ module PDP {--}
    , transLT
 
     -- * Named
+   , Name
    , Named
    , pattern Named
    , type (@)
@@ -103,36 +100,31 @@ module PDP {--}
    , type (?)
    , unRefined
    , unsafeRefined
-
-    -- * Misc
-   , Description1 (..)
-   , WellKnown (..)
-   , Decision
    ) -- }
 where
 
 import Control.Arrow ((&&&))
 import Data.Coerce
-import Data.Fixed
-import Data.Int
 import Data.Kind (Type)
-import Data.Scientific (Scientific)
-import Data.Singletons
-import Data.Type.Ord
-import Data.Word
-import GHC.Real
-import GHC.Show
-import GHC.TypeLits
 
 --------------------------------------------------------------------------------
 
-data Proof (p :: k)
+-- The kind of names.
+data Name
+
+data Proof (p :: Type)
    = -- | Be careful with this constructor! Mostly just use it to define axioms.
      QED
-   deriving (Show)
+   deriving (Eq, Ord, Show)
+
+data Pred
+  = PredTRUE
+  | PredNOT
+  | PredAND
+  | PredOR
 
 type a --> b = NOT a `OR` b
-type (-->) :: a -> b -> Type
+type (-->) :: Type -> Type -> Type
 infixr 0 -->
 
 data TRUE
@@ -140,33 +132,33 @@ data TRUE
 type FALSE = NOT TRUE
 
 data AND l r
-type AND :: l -> r -> Type
+type AND :: Type -> Type -> Type
 infixl 7 `AND`
 
 data AND1 f g x
-type AND1 :: (x -> fx) -> (x -> fx) -> x -> Type
+type AND1 :: (Name -> Type) -> (Name -> Type) -> Name -> Type
 infixl 7 `AND1`
 
 data OR l r
-type OR :: l -> r -> Type
+type OR :: Type -> Type -> Type
 infixl 5 `OR`
 
 data OR1 f g x
-type OR1 :: (x -> fx) -> (x -> fx) -> x -> Type
+type OR1 :: (Name -> Type) -> (Name -> Type) -> Name -> Type
 infixl 5 `OR1`
 
 data NOT a
-type NOT :: a -> Type
+type NOT :: Type -> Type
 
 data NOT1 f x
-type NOT1 :: (x -> fx) -> x -> Type
+type NOT1 :: (Name -> Type) -> Name -> Type
 
 type XOR l r = (l `AND` NOT r) `OR` (NOT l `AND` r)
-type XOR :: l -> r -> Type
+type XOR :: Type -> Type -> Type
 infixl 4 `XOR`
 
 type XNOR l r = (l `AND` r) `OR` NOT (l `OR` r)
-type XNOR :: l -> r -> Type
+type XNOR :: Type -> Type -> Type
 infixl 4 `XNOR`
 
 true :: Proof TRUE
@@ -273,7 +265,8 @@ unNOT1 _ = QED
 
 --------------------------------------------------------------------------------
 
-newtype Named (n :: k) (a :: Type) = UnsafeNamed a
+type Named :: Name -> Type -> Type
+newtype Named n a = UnsafeNamed a
    deriving newtype (Eq, Ord, Show)
 
 type role Named nominal representational
@@ -291,7 +284,7 @@ pattern Named :: forall n a. a -> n @ a
 pattern Named a <- (coerce -> a)
 {-# COMPLETE Named #-}
 
-named :: forall a b. a -> (forall n. n @ a -> b) -> b
+named :: forall a b. a -> (forall (n :: Name). n @ a -> b) -> b
 named a f = f (coerce a)
 {-# INLINE named #-}
 
@@ -301,12 +294,9 @@ unsafeMapNamed = coerce
 
 --------------------------------------------------------------------------------
 
-type Decision p = Either (Proof (NOT p)) (Proof p)
-
---------------------------------------------------------------------------------
-
 type role Refined nominal representational
 
+type Refined :: (Name -> Type) -> Type -> Type
 newtype Refined p a = UnsafeRefined a
    deriving newtype (Eq, Ord, Show)
 
@@ -331,32 +321,32 @@ pattern Refined na pn <- (coerce &&& const QED -> (na, pn))
 -- | @x < y@, according to 'Ord'.
 data LT y x
 
-type LT :: y -> x -> Type
+type LT :: Name -> Name -> Type
 
 -- | @x == y@, according to 'Ord'.
 data EQ y x
 
-type EQ :: y -> x -> Type
+type EQ :: Name -> Name -> Type
 
 -- | @x > y@, according to 'Ord'.
 data GT y x
 
-type GT :: y -> x -> Type
+type GT :: Name -> Name -> Type
 
 -- | @x /= y@, according to 'Ord'.
 type NE y = OR1 (LT y) (GT y)
 
-type NE :: y -> x -> Type
+type NE :: Name -> Name -> Type
 
 -- | @x <= y@, according to 'Ord'.
 type LE y = OR1 (LT y) (EQ y)
 
-type LE :: y -> x -> Type
+type LE :: Name -> Name -> Type
 
 -- | @x >= y@, according to 'Ord'.
 type GE y = OR1 (GT y) (EQ y)
 
-type GE :: y -> x -> Type
+type GE :: Name -> Name -> Type
 
 transLT :: Proof (LT a b) -> Proof (LT b c) -> Proof (LT a c)
 transLT _ _ = QED
@@ -430,6 +420,20 @@ notGE _ = QED
 symNE :: Proof (NE a b) -> Proof (NE b a)
 symNE _ = QED
 
+data Cmp (l :: Name) (r :: Name)
+   = CmpLT (Proof (LT r l))
+   | CmpEQ (Proof (EQ r l))
+   | CmpGT (Proof (GT r l))
+   deriving (Eq, Ord, Show)
+
+cmp :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Cmp l r
+cmp fa fb (Named la) (Named rb) =
+   case compare (fb rb) (fa la) of
+      LT -> CmpLT QED
+      EQ -> CmpEQ QED
+      GT -> CmpGT QED
+
+{-
 lt :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (LT l r)
 lt fa fb (Named la) (Named rb) =
    if fb rb < fa la then Right QED else Left QED
@@ -459,167 +463,4 @@ ge :: (Ord w) => (a -> w) -> (b -> w) -> l @ a -> r @ b -> Decision (GE l r)
 ge fa fb (Named la) (Named rb) =
    if fb rb >= fa la then Right QED else Left QED
 {-# INLINE ge #-}
-
--------------------------------------------------------------------------------
-
-class Description1 p where
-   description1Prec :: Int -> ShowS
-
-instance forall p. (Description1 p) => Description1 (NOT1 p) where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         showString "not . "
-            . description1Prec @p appPrec1
-
-instance
-   forall l r
-    . (Description1 l, Description1 r)
-   => Description1 (AND1 l r)
-   where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         description1Prec @l appPrec1
-            . showString " and "
-            . description1Prec @r appPrec1
-
-instance
-   forall l r
-    . (Description1 l, Description1 r)
-   => Description1 (OR1 l r)
-   where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         description1Prec @l appPrec1
-            . showString " or "
-            . description1Prec @r appPrec1
-
-instance
-   {-# OVERLAPPABLE #-}
-   forall k n
-    . (SingKind k, SingI n, Show (Demote k))
-   => Description1 (GT (n :: k))
-   where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         showString "more than "
-            . showsPrec appPrec1 (demote @n)
-
-instance
-   {-# OVERLAPPABLE #-}
-   forall k n
-    . (SingKind k, SingI n, Show (Demote k))
-   => Description1 (LT (n :: k))
-   where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         showString "less than "
-            . showsPrec appPrec1 (demote @n)
-
-instance
-   {-# OVERLAPPABLE #-}
-   forall k n
-    . (SingKind k, SingI n, Show (Demote k))
-   => Description1 (EQ (n :: k))
-   where
-   description1Prec i =
-      showParen (i >= appPrec1) $
-         showString "equal to "
-            . showsPrec appPrec1 (demote @n)
-
---------------------------------------------------------------------------------
-
-class WellKnown n (a :: Type) where
-   wellKnown :: n @ a
-
-instance
-   {-# OVERLAPPABLE #-}
-   forall kn n a
-    . (SingKind kn, SingI n, Demote kn ~ a)
-   => WellKnown (n :: kn) a
-   where
-   wellKnown = unsafeNamed (demote @n)
-   {-# INLINE wellKnown #-}
-
-instance
-   forall n a
-    . (WellKnown n a, WellKnown 1 a, Integral a)
-   => WellKnown n (Ratio a)
-   where
-   wellKnown = unsafeMapNamed (:% 1) $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n) => WellKnown n Natural where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n) => WellKnown n Integer where
-   wellKnown = unsafeNamed $ natVal $ Proxy @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 64 - 1) => WellKnown n Word64 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-#if WORD_SIZE_IN_BITS == 64
-instance forall n. (KnownNat n, n <= 2^64-1) => WellKnown n Word where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-#elif WORD_SIZE_IN_BITS == 32
-instance forall n. (KnownNat n, n <= 2^32-1) => WellKnown n Word  where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-#endif
-
-instance forall n. (KnownNat n, n <= 2 ^ 32 - 1) => WellKnown n Word32 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 16 - 1) => WellKnown n Word16 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 8 - 1) => WellKnown n Word8 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 63 - 1) => WellKnown n Int64 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-#if WORD_SIZE_IN_BITS == 64
-instance forall n. (KnownNat n, n <= 2 ^ 63 -1 ) => WellKnown n Int where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-#elif WORD_SIZE_IN_BITS == 32
-instance forall n . (KnownNat n, n <= 2 ^ 31 - 1) => WellKnown n Int where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-#endif
-
-instance forall n. (KnownNat n, n <= 2 ^ 31 - 1) => WellKnown n Int32 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 15 - 1) => WellKnown n Int16 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 7 - 1) => WellKnown n Int8 where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n e. (KnownNat n, HasResolution e) => WellKnown n (Fixed e) where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 53) => WellKnown n Double where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n, n <= 2 ^ 24) => WellKnown n Float where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
-
-instance forall n. (KnownNat n) => WellKnown n Scientific where
-   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
-   {-# INLINE wellKnown #-}
+-}
