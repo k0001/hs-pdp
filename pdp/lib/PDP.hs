@@ -103,6 +103,7 @@ module PDP {--}
     -- * Refined
    , Refined
    , pattern Refined
+   , pattern (:?)
    , type (?)
    , unRefined
    , unsafeRefined
@@ -302,6 +303,7 @@ newtype Refined p a = UnsafeRefined a
    deriving newtype (Eq, Ord, Show)
 
 type a ? p = Refined p a
+infixl 5 ?
 
 unsafeRefined :: forall p a. a -> a ? p
 unsafeRefined = coerce
@@ -316,6 +318,15 @@ pattern Refined na pn <- (coerce &&& const QED -> (na, pn))
    where
       Refined na _ = coerce na
 {-# COMPLETE Refined #-}
+
+-- | Same as patterm 'Refined'.
+pattern (:?) :: forall p n a. n @ a -> Proof (p n) -> a ? p
+pattern (:?) na pn <- Refined na pn
+   where
+      (:?) = Refined
+{-# COMPLETE (:?) #-}
+
+infixl 5 :?
 
 --------------------------------------------------------------------------------
 
