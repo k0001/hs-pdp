@@ -82,6 +82,8 @@ module PDP {--}
    , notLE
    , notLT
    , reflEQ
+   , reflGE
+   , reflLE
    , symEQ
    , symNE
    , transEQ
@@ -383,6 +385,12 @@ symEQ _ = QED
 
 reflEQ :: Proof (EQ a a)
 reflEQ = QED
+
+reflGE :: Proof (GE a a)
+reflGE = QED
+
+reflLE :: Proof (GE a a)
+reflLE = QED
 
 notEQ :: Proof (NOT (EQ a b)) -> Proof (NE a b)
 notEQ _ = QED
