@@ -109,12 +109,23 @@ module PDP {--}
    , type (?)
    , unRefined
    , unsafeRefined
+
+    -- * Well known names
+   , WK (..)
+   , WellKnown (..)
    ) -- }
 where
 
 import Control.Arrow ((&&&))
 import Data.Coerce
+import Data.Fixed
+import Data.Int
 import Data.Kind (Type)
+import Data.Scientific (Scientific)
+import Data.Singletons
+import Data.Word
+import GHC.Real
+import GHC.TypeLits
 
 --------------------------------------------------------------------------------
 
@@ -326,6 +337,7 @@ pattern (:?) :: forall p n a. n @ a -> Proof (p n) -> a ? p
 pattern (:?) na pn <- Refined na pn
    where
       (:?) = Refined
+
 {-# COMPLETE (:?) #-}
 
 infixl 5 :?
@@ -522,3 +534,91 @@ ge fa fb na nb = case cmp fa fb na nb of
    CmpEQ p -> Right $ inOR1 $ inrOR p
    CmpGT p -> Right $ inOR1 $ inlOR p
    CmpLT p -> Left p
+
+--------------------------------------------------------------------------------
+
+newtype WK t = WK Name
+
+class WellKnown t a where
+   wellKnown :: WK t @ a
+
+instance
+   {-# OVERLAPPABLE #-}
+   forall kn n a
+    . (SingKind kn, SingI n, Demote kn ~ a)
+   => WellKnown (n :: kn) a
+   where
+   wellKnown = unsafeNamed (demote @n)
+   {-# INLINE wellKnown #-}
+
+instance
+   forall n a
+    . (WellKnown n a, WellKnown 1 a, Integral a)
+   => WellKnown n (Ratio a)
+   where
+   wellKnown = unsafeMapNamed (:% 1) $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n) => WellKnown n Natural where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n) => WellKnown n Integer where
+   wellKnown = unsafeNamed $ natVal $ Proxy @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 64 - 1) => WellKnown n Word64 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ WORD_SIZE_IN_BITS - 1) => WellKnown n Word where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 32 - 1) => WellKnown n Word32 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 16 - 1) => WellKnown n Word16 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 8 - 1) => WellKnown n Word8 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 63 - 1) => WellKnown n Int64 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ WORD_SIZE_IN_BITS - 1) => WellKnown n Int where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 31 - 1) => WellKnown n Int32 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 15 - 1) => WellKnown n Int16 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 7 - 1) => WellKnown n Int8 where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n e. (KnownNat n, HasResolution e) => WellKnown n (Fixed e) where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 53) => WellKnown n Double where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n, n <= 2 ^ 24) => WellKnown n Float where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
+
+instance forall n. (KnownNat n) => WellKnown n Scientific where
+   wellKnown = unsafeMapNamed fromInteger $ wellKnown @n
+   {-# INLINE wellKnown #-}
