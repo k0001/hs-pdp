@@ -109,6 +109,7 @@ module PDP {--}
    , type (?)
    , unRefined
    , unsafeRefined
+   , unsafeMapRefined
 
     -- * Well known names
    , WK (..)
@@ -326,6 +327,10 @@ unsafeRefined = coerce
 unRefined :: forall p a. a ? p -> a
 unRefined = coerce
 {-# INLINE unRefined #-}
+
+unsafeMapRefined :: forall p a b. (a -> b) -> a ? p -> b ? p
+unsafeMapRefined = coerce
+{-# INLINE unsafeMapRefined #-}
 
 pattern Refined :: forall p n a. n @ a -> Proof (p n) -> a ? p
 pattern Refined na pn <- (coerce &&& const QED -> (na, pn))
