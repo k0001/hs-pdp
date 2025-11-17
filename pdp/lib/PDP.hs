@@ -276,12 +276,14 @@ unNOT1 _ = QED
 
 --------------------------------------------------------------------------------
 
-type Named :: Type -> Type -> Type
-newtype Named n a = UnsafeNamed a
+newtype n @ a = UnsafeNamed a
    deriving newtype (Eq, Ord, Show)
+type role (@) nominal representational
+type (@) :: Type -> Type -> Type
+type Named = (@)
 
-type role Named nominal representational
-type (@) = Named
+-- not sure if fixity is correct
+infixr 9 @
 
 -- | To define a new name, create a @newtype@ around 'Name' and use
 -- 'unsafeNamed'. Do not export the @newtype@ constructor.
@@ -309,14 +311,13 @@ unsafeMapNamed = coerce
 
 --------------------------------------------------------------------------------
 
-type role Refined nominal representational
-
-type Refined :: (Type -> Type) -> Type -> Type
-newtype Refined p a = UnsafeRefined a
+newtype a ? p = UnsafeRefined a
    deriving newtype (Eq, Ord, Show)
-
-type a ? p = Refined p a
+type role (?) representational nominal
+type (?) :: Type -> (Type -> Type) -> Type
 infixl 5 ?
+
+type Refined p a = a ? p
 
 unsafeRefined :: forall p a. a -> a ? p
 unsafeRefined = coerce
